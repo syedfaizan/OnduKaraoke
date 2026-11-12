@@ -1,0 +1,18 @@
+# Railway config — the Ondu Karaoke backend.
+#
+# Railway supports WebSockets on every plan (the free trial gives you a
+# one-time $5 credit; the Free plan includes $1/month of usage).
+#
+# Deploy: `railway init` → `railway up`
+#
+# Remember: rooms live in memory, so keep this service at ONE replica.
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+startCommand = "node server/index.js"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

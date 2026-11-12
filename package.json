@@ -1,0 +1,31 @@
+{
+  "name": "ondu-karaoke",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ondu Karaoke — party karaoke with a TV host screen and phone controllers",
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "build:worker": "VITE_REALTIME=ws npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "smoke": "npm --prefix server run smoke",
+    "dev:worker": "npm run build:worker && wrangler dev",
+    "deploy": "npm run build:worker && wrangler deploy",
+    "secret": "wrangler secret put YOUTUBE_API_KEY",
+    "smoke:worker": "node worker/scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wrangler": "^4.0.0",
+    "ws": "^8.22.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "workerd@1.20261110.1": true
+  }
+}

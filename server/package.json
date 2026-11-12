@@ -1,0 +1,22 @@
+{
+  "name": "ondu-karaoke-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Express + Socket.IO backend for Ondu Karaoke",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.7.5"
+  }
+}

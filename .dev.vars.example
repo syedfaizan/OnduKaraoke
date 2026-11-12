@@ -1,0 +1,9 @@
+# ---------------------------------------------------------------------------
+# Ondu Karaoke — local secrets for `wrangler dev`
+#
+# Copy this file to `.dev.vars` (git-ignored) and fill in your key.
+# `.dev.vars` is how wrangler passes secrets to the Worker locally.
+# In production use:  npx wrangler secret put YOUTUBE_API_KEY
+# ---------------------------------------------------------------------------
+
+YOUTUBE_API_KEY=your_youtube_api_key_here

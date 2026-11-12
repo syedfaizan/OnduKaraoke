@@ -1,0 +1,9 @@
+node_modules/
+client/dist/
+.env
+.DS_Store
+*.log
+
+# Cloudflare
+.dev.vars
+.wrangler/

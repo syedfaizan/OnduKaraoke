@@ -1,0 +1,23 @@
+# Render blueprint — the Ondu Karaoke backend.
+#
+# Render's FREE web service tier supports WebSockets (a free instance spins
+# down after 15 minutes without traffic and wakes up again in ~1 minute).
+#
+# Deploy: https://render.com/deploy  (or "New → Blueprint" in the dashboard)
+#
+# The frontend lives on Vercel — set CLIENT_ORIGIN to the Vercel URL so the
+# browser is allowed to call this API.
+
+services:
+  - type: web
+    name: ondu-karaoke-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    # Rooms live in memory → the backend MUST run as a single instance.
+    numInstances: 1
+    envVars:
+      - key: YOUTUBE_API_KEY
+        sync: false # set this in the Render dashboard (secret)
+      - key: CLIENT_ORIGIN
+        sync: false # e.g. https://ondu-karaoke.vercel.app
