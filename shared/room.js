@@ -23,6 +23,15 @@ export const SOUND_COOLDOWN_MS = 2000;
 /** 4-letter room codes — no I/L/O so nobody mistypes them. */
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 
+/**
+ * The host password: 6 digits, easy to read out loud and type on a phone.
+ * It is the "I am the host" secret — the host token is the machine-to-machine
+ * secret (used by the host-remote QR), this one is the human one.
+ */
+export function randomHostPassword() {
+  return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
+}
+
 /** Works in Node 18+, Workers and browsers. */
 const uuid = () => globalThis.crypto.randomUUID();
 
@@ -268,14 +277,18 @@ export function computeSummary(room) {
 /**
  * A fresh, empty room.
  *
- * `hostToken` is the secret that turns a phone into the "host remote".
- * The Node server mints it when the room is created; on Cloudflare the room
- * object has no token until the first host connects and claims it.
+ * `hostToken` is the machine secret that turns a phone into the "host remote"
+ * (it travels in the QR code). `hostPassword` is the human secret — six digits
+ * the host can read out to get back into the room.
+ *
+ * The Node server mints both when the room is created; on Cloudflare the room
+ * object gets them when the first host connects and claims it.
  */
-export function createRoomState(code, { hostToken = null } = {}) {
+export function createRoomState(code, { hostToken = null, hostPassword = null } = {}) {
   return {
     code,
     hostToken,
+    hostPassword,
     hostSocketId: null,
     partyStarted: false,
     phase: 'idle', // idle | intermission | playing | ended

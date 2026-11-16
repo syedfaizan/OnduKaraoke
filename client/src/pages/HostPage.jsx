@@ -6,6 +6,7 @@ import { confettiBurst, confettiCelebration } from '../lib/confetti.js';
 import { useToast } from '../lib/useToast.js';
 import { useConnected } from '../lib/useConnected.js';
 import { apiUrl } from '../lib/config.js';
+import { clearHostSession, loadHostSession, saveHostSession } from '../lib/session.js';
 import NeonTitle from '../components/NeonTitle.jsx';
 import QrPanel from '../components/QrPanel.jsx';
 import YoutubePlayer from '../components/YoutubePlayer.jsx';
@@ -16,33 +17,70 @@ import ReactionLayer from '../components/ReactionLayer.jsx';
 import SummaryScreen from '../components/SummaryScreen.jsx';
 import ToastDeck from '../components/ToastDeck.jsx';
 
-/** The host screen keeps its room in sessionStorage so a refresh recovers it. */
-const HOST_SESSION_KEY = 'ondu:host-session';
-
 const SPEEDS = [0.75, 0.9, 1, 1.1, 1.25];
 
-function loadHostSession() {
-  try {
-    return JSON.parse(sessionStorage.getItem(HOST_SESSION_KEY)) || null;
-  } catch {
-    return null;
-  }
-}
+/**
+ * "I already have a room" — the host comes back with the room code and the
+ * 6-digit password (shown when the room was created).
+ */
+function RejoinForm({ onReclaim, disabled }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
 
-function saveHostSession(session) {
-  try {
-    sessionStorage.setItem(HOST_SESSION_KEY, JSON.stringify(session));
-  } catch {
-    // ignore
+  if (!open) {
+    return (
+      <button type="button" className="btn btn-ghost" onClick={() => setOpen(true)}>
+        ♻️ I already have a room
+      </button>
+    );
   }
-}
 
-function clearHostSession() {
-  try {
-    sessionStorage.removeItem(HOST_SESSION_KEY);
-  } catch {
-    // ignore
-  }
+  return (
+    <form
+      className="rejoin-card card"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const cleanCode = code.trim().toUpperCase();
+        const cleanPassword = password.trim();
+        if (cleanCode.length < 3 || cleanPassword.length < 4) return;
+        onReclaim(cleanCode, cleanPassword);
+      }}
+    >
+      <p className="panel-title">Get back into your room</p>
+      <div className="rejoin-row">
+        <input
+          className="neon-input code-input"
+          value={code}
+          onChange={(event) => setCode(event.target.value.toUpperCase())}
+          maxLength={4}
+          placeholder="CODE"
+          aria-label="Room code"
+        />
+        <input
+          className="neon-input"
+          value={password}
+          onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))}
+          maxLength={6}
+          placeholder="123456"
+          inputMode="numeric"
+          aria-label="Host password"
+        />
+      </div>
+      <div className="rejoin-actions">
+        <button
+          type="submit"
+          className="btn btn-pink"
+          disabled={disabled || code.trim().length < 3 || password.trim().length < 4}
+        >
+          Rejoin as host 🎤
+        </button>
+        <button type="button" className="link-btn" onClick={() => setOpen(false)}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
 }
 
 /**
@@ -70,17 +108,21 @@ export default function HostPage() {
       const saved = loadHostSession();
       if (!saved) return;
 
-      socket.emit('host:connect', { roomCode: saved.roomCode, hostToken: saved.hostToken }, (ack) => {
-        if (!ack?.ok) {
-          // The server restarted (rooms are in memory) — start over.
-          clearHostSession();
-          setSession(null);
-          setState(null);
-          show('That room expired (server restarted?) — create a new one 👇', 'error');
-          return;
-        }
-        setState(ack.state);
-      });
+      socket.emit(
+        'host:connect',
+        { roomCode: saved.roomCode, hostToken: saved.hostToken, hostPassword: saved.hostPassword },
+        (ack) => {
+          if (!ack?.ok) {
+            // The room is gone (or the backend restarted) — start over.
+            clearHostSession();
+            setSession(null);
+            setState(null);
+            show('That room expired (server restarted?) — create a new one 👇', 'error');
+            return;
+          }
+          setState(ack.state);
+        },
+      );
     };
 
     const onState = (next) => setState(next);
@@ -124,13 +166,46 @@ export default function HostPage() {
         show('Could not create a room — is the backend running?', 'error');
         return;
       }
-      const saved = { roomCode: ack.roomCode, hostToken: ack.hostToken };
+      const saved = {
+        roomCode: ack.roomCode,
+        hostToken: ack.hostToken,
+        hostPassword: ack.hostPassword, // shown on screen so the host can come back
+      };
       saveHostSession(saved);
       setSession(saved);
       setState(ack.state);
       intermissionFor.current = null;
     });
   }, [show]);
+
+  /**
+   * Get back into a room with the 6-digit host password — for when the host
+   * closed the tab, pressed "back", or wants to run the party from another
+   * device.
+   */
+  const reclaimRoom = useCallback(
+    (code, password) => {
+      socket.emit('host:reclaim', { roomCode: code, password }, (ack) => {
+        if (!ack?.ok) {
+          show(ack?.error || 'Could not get back into that room', 'error');
+          return;
+        }
+        // We keep the token when we have it, otherwise the password is enough
+        // from now on (the room already stores it).
+        const saved = {
+          roomCode: code,
+          hostToken: loadHostSession()?.hostToken || null,
+          hostPassword: password,
+        };
+        saveHostSession(saved);
+        setSession(saved);
+        setState(ack.state);
+        intermissionFor.current = null;
+        show(`Welcome back, host of ${code} 🎤`);
+      });
+    },
+    [show],
+  );
 
   const startParty = () => {
     unlockAudio(); // one click = the browser lets us make noise all night
@@ -183,6 +258,60 @@ export default function HostPage() {
   };
 
   const setSpeed = (rate) => socket.emit('speed:set', { roomCode, rate });
+
+  /* ---------------- sharing ---------------- */
+
+  const copyText = useCallback(
+    async (text, message) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        show(message);
+      } catch {
+        show('Could not copy it — it is on screen anyway 👆', 'error');
+      }
+    },
+    [show],
+  );
+
+  /** Share the join link with other apps (WhatsApp, Messages, AirDrop, …). */
+  const shareLink = useCallback(
+    async (url) => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Ondu Karaoke',
+            text: `Join my karaoke party! 🎤 Room code ${roomCode}`,
+            url,
+          });
+          return;
+        } catch (err) {
+          if (err?.name === 'AbortError') return; // the user closed the sheet
+        }
+      }
+      // No share sheet (a TV browser, for instance) → copy instead.
+      copyText(url, 'Link copied 📋');
+    },
+    [copyText, roomCode, show],
+  );
+
+  /** Host controls on the TV itself: move a song up/down or drop it. */
+  const moveSong = useCallback(
+    (songId, dir) => {
+      socket.emit('queue:move', { roomCode, songId, dir }, (ack) => {
+        if (ack && !ack.ok) show(ack.error || 'Could not move that song', 'error');
+      });
+    },
+    [roomCode, show],
+  );
+
+  const removeSong = useCallback(
+    (songId) => {
+      socket.emit('queue:remove', { roomCode, songId }, (ack) => {
+        if (ack && !ack.ok) show(ack.error || 'Could not remove that song', 'error');
+      });
+    },
+    [roomCode, show],
+  );
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -249,14 +378,18 @@ export default function HostPage() {
             <span className="spinner" /> Reconnecting to room {session.roomCode}…
           </div>
         ) : (
-          <button
-            type="button"
-            className="btn btn-cyan big"
-            onClick={createRoom}
-            disabled={!connected}
-          >
-            {connected ? 'Create a room 🎤' : 'Connecting…'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn btn-cyan big"
+              onClick={createRoom}
+              disabled={!connected}
+            >
+              {connected ? 'Create a room 🎤' : 'Connecting…'}
+            </button>
+
+            <RejoinForm onReclaim={reclaimRoom} disabled={!connected} />
+          </>
         )}
 
         <p className="landing-note">
@@ -323,7 +456,15 @@ export default function HostPage() {
       </header>
 
       <main className="host-layout">
-        <QrPanel baseUrl={baseUrl} roomCode={state.roomCode} hostToken={hostToken} />
+        <QrPanel
+          baseUrl={baseUrl}
+          roomCode={state.roomCode}
+          hostToken={hostToken}
+          hostPassword={session?.hostPassword}
+          onShare={shareLink}
+          onCopy={(url) => copyText(url, 'Link copied 📋')}
+          onCopyPassword={(password) => copyText(password, 'Host password copied 🔐')}
+        />
 
         <section className="stage">
           {state.partyStarted ? (
@@ -363,6 +504,9 @@ export default function HostPage() {
             variant="host"
             current={state.current}
             queue={state.queue || []}
+            isHost
+            onMove={moveSong}
+            onRemove={removeSong}
           />
           <Leaderboard singerStats={state.singerStats || []} />
         </div>

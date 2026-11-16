@@ -59,16 +59,42 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
 
     case 'host:connect': {
       const token = String(payload.hostToken || '');
+      const password = String(payload.hostPassword || '');
 
       // First claim of this room wins and becomes the host secret.
-      if (!room.hostToken) room.hostToken = token;
-      if (!token || room.hostToken !== token) {
+      if (!room.hostToken) {
+        room.hostToken = token;
+        if (password) room.hostPassword = password;
+      }
+
+      // Either secret works: the machine token (host remote QR) or the
+      // 6-digit password the host read out.
+      const tokenOk = Boolean(token) && room.hostToken === token;
+      const passwordOk = Boolean(password) && room.hostPassword && password === room.hostPassword;
+
+      if (!tokenOk && !passwordOk) {
         return fail('That room no longer exists (the server may have restarted) — create a new one.');
       }
 
       room.hostSocketId = actor.socketId;
       api.touch?.();
-      return { ok: true, state: api.buildState() };
+      return { ok: true, isHost: true, state: api.buildState() };
+    }
+
+    /**
+     * Get back into a room with the 6-digit host password (the host closed
+     * the tab, pressed "back", or is joining from another device).
+     */
+    case 'host:reclaim': {
+      const password = String(payload.password || '').trim();
+
+      if (!room.hostPassword || password !== room.hostPassword) {
+        return fail('That password does not match this room.');
+      }
+
+      room.hostSocketId = actor.socketId;
+      api.touch?.();
+      return { ok: true, isHost: true, state: api.buildState() };
     }
 
     case 'guest:join': {
@@ -79,7 +105,14 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       }
 
       const cleanName = String(payload.name || '').trim().slice(0, 24) || 'Guest';
-      const isHostRemote = Boolean(payload.hostToken && payload.hostToken === room.hostToken);
+
+      // Host rights come from the machine token (host remote QR) or from the
+      // human password the host read out.
+      const tokenOk = Boolean(payload.hostToken && payload.hostToken === room.hostToken);
+      const passwordOk = Boolean(
+        payload.hostPassword && room.hostPassword && payload.hostPassword === room.hostPassword,
+      );
+      const isHostRemote = tokenOk || passwordOk;
 
       const joined = upsertGuest(room, {
         guestId: payload.guestId,

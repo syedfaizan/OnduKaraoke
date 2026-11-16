@@ -1,31 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
 /**
  * LEFT column of the host screen: the join QR code (always visible) with the
- * room code underneath, plus a smaller "host remote" QR that turns a phone
- * into the host controller (skip / reorder / speed).
+ * room code underneath, the host password, share buttons, plus a smaller
+ * "host remote" QR that turns a phone into the host controller.
  *
  * `baseUrl` is the origin phones can reach (the LAN address when the host
  * screen runs on localhost). The room path is appended here so the QR always
  * points at THIS room's join page.
  */
-export default function QrPanel({ baseUrl, roomCode, hostToken }) {
+export default function QrPanel({
+  baseUrl,
+  roomCode,
+  hostToken,
+  hostPassword = '',
+  onShare,
+  onCopy,
+  onCopyPassword,
+}) {
   const [guestQr, setGuestQr] = useState('');
   const [hostQr, setHostQr] = useState('');
 
-  const joinUrl = useMemo(
-    () => (baseUrl && roomCode ? `${baseUrl.replace(/\/+$/, '')}/join/${roomCode}` : ''),
-    [baseUrl, roomCode],
-  );
-
-  const hostUrl = useMemo(
-    () => (joinUrl && hostToken ? `${joinUrl}?hostToken=${hostToken}` : ''),
-    [joinUrl, hostToken],
-  );
+  const joinUrl = `${
+    (baseUrl || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/+$/, '')
+  }/join/${roomCode}`;
+  const hostUrl = `${joinUrl}?hostToken=${hostToken}`;
 
   useEffect(() => {
-    if (!joinUrl) return undefined;
+    if (!joinUrl || joinUrl.endsWith('/join/undefined')) return undefined;
 
     let alive = true;
     const options = {
@@ -40,7 +43,7 @@ export default function QrPanel({ baseUrl, roomCode, hostToken }) {
       if (alive) setGuestQr(url);
     });
 
-    if (hostUrl) {
+    if (hostToken) {
       QRCode.toDataURL(hostUrl, options).then((url) => {
         if (alive) setHostQr(url);
       });
@@ -49,7 +52,7 @@ export default function QrPanel({ baseUrl, roomCode, hostToken }) {
     return () => {
       alive = false;
     };
-  }, [joinUrl, hostUrl]);
+  }, [joinUrl, hostUrl, hostToken]);
 
   return (
     <aside className="qr-panel card">
@@ -65,11 +68,41 @@ export default function QrPanel({ baseUrl, roomCode, hostToken }) {
         {roomCode}
       </div>
 
+      <div className="share-row">
+        <button type="button" className="btn btn-cyan share-btn" onClick={() => onShare?.(joinUrl)}>
+          📤 Share
+        </button>
+        <button type="button" className="btn btn-ghost share-btn" onClick={() => onCopy?.(joinUrl)}>
+          🔗 Copy link
+        </button>
+      </div>
+
       <p className="qr-hint">
         Scan with a phone 📱
         <br />
-        or open <span className="mono">{joinUrl || '…'}</span>
+        or open <span className="mono">{joinUrl}</span>
       </p>
+
+      {hostPassword && (
+        <div className="host-password">
+          <div className="host-password-head">
+            <span className="host-password-label">Host password</span>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => onCopyPassword?.(hostPassword)}
+              title="Copy the password"
+            >
+              copy
+            </button>
+          </div>
+          <div className="host-password-value">{hostPassword}</div>
+          <p className="host-password-hint">
+            Write it down — use it to get back into this room if you press back
+            or close the tab.
+          </p>
+        </div>
+      )}
 
       {hostQr && (
         <div className="host-remote">

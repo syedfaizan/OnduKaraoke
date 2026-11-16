@@ -12,7 +12,7 @@
 
 import { Room } from './room.js';
 import { searchKaraoke } from './youtube.js';
-import { randomRoomCode } from '../shared/room.js';
+import { randomRoomCode, randomHostPassword } from '../shared/room.js';
 import { YouTubeError } from '../shared/youtube.js';
 
 export { Room };
@@ -79,8 +79,10 @@ async function handleApi(request, env, url) {
   if (path === '/rooms' && request.method === 'POST') {
     const code = await createRoomCode(env);
     const hostToken = crypto.randomUUID();
+    const hostPassword = randomHostPassword();
 
-    return Response.json({ roomCode: code, hostToken });
+    // The Durable Object claims both secrets when the host first connects.
+    return Response.json({ roomCode: code, hostToken, hostPassword });
   }
 
   /* --- song search --- */

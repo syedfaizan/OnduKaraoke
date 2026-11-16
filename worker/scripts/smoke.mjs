@@ -144,6 +144,7 @@ async function main() {
     const hostAck = await host.emit('host:connect', {
       roomCode: created.roomCode,
       hostToken: created.hostToken,
+      hostPassword: created.hostPassword, // the room claims it on first connect
     });
     check('the host claims the room', hostAck?.ok === true, JSON.stringify(hostAck));
 
@@ -252,6 +253,31 @@ async function main() {
     );
     check('the next song takes the mic', next.current?.id === expectedNext, JSON.stringify(next.current));
 
+    console.log('\n· host password + coming back');
+    check(
+      'the host gets a 6-digit password',
+      /^\d{6}$/.test(created.hostPassword || ''),
+      created.hostPassword,
+    );
+
+    const wrong = await host.emit('host:reclaim', {
+      roomCode: created.roomCode,
+      password: '000000',
+    });
+    check('a wrong password is rejected', wrong?.ok === false, JSON.stringify(wrong));
+
+    // A brand new connection (a different device) reclaims the room.
+    const comeback = new RoomClient(created.roomCode);
+    await comeback.connect();
+    const reclaimed = await comeback.emit('guest:join', {
+      name: 'Host again',
+      hostPassword: created.hostPassword,
+    });
+    check('the password gives you host rights', reclaimed?.isHost === true, JSON.stringify(reclaimed));
+
+    const hostOnly = await asha.emit('song:skip');
+    check('a plain guest still cannot skip', hostOnly?.ok === false, JSON.stringify(hostOnly));
+
     console.log('\n· reconnect keeps the name');
     ravi.close();
     const raviAgain = new RoomClient(created.roomCode);
@@ -268,12 +294,17 @@ async function main() {
     const ended = await waitForState(host, (s) => s.phase === 'ended', 'the night summary');
     const badges = (ended.summary?.badges || []).map((badge) => badge.title);
     check('the summary has badges', badges.includes('Most Songs'), badges.join(', '));
-    check('the summary has a leaderboard', (ended.summary?.leaderboard || []).length === 2);
+    check(
+      'the summary has a leaderboard',
+      (ended.summary?.leaderboard || []).length === 3,
+      String((ended.summary?.leaderboard || []).length),
+    );
     check('the totals are counted', ended.summary?.totals?.songs >= 1);
 
     host.close();
     asha.close();
     raviAgain.close();
+    comeback.close();
   } finally {
     wrangler.kill('SIGTERM');
   }
@@ -285,6 +316,9 @@ async function main() {
     console.log(`❌  ${failures} check(s) failed.`);
     process.exitCode = 1;
   }
+
+  // The websocket clients keep the event loop alive — leave explicitly.
+  process.exit(failures === 0 ? 0 : 1);
 }
 
 main().catch((err) => {

@@ -154,17 +154,26 @@ export function createWsTransport() {
     emit(event, payload = {}, ack) {
       failed = false;
 
+      // socket.io lets you emit without a payload: emit('event', ack).
+      // Normalise that so both transports behave the same.
+      if (typeof payload === 'function' && ack === undefined) {
+        ack = payload;
+        payload = {};
+      }
+
       /* Creating a room needs an HTTP call first — the Worker hands out the
          code and the secret that turns a phone into the host remote. */
       if (event === 'host:create') {
         fetch(apiUrl('/api/rooms'), { method: 'POST' })
           .then((response) => response.json())
-          .then(({ roomCode: code, hostToken }) => {
+          .then(({ roomCode: code, hostToken, hostPassword }) => {
             connect(code);
             whenOpen()
               .then(() =>
-                sendCommand('host:connect', { roomCode: code, hostToken }, (result) =>
-                  ack?.({ ...result, roomCode: code, hostToken }),
+                sendCommand(
+                  'host:connect',
+                  { roomCode: code, hostToken, hostPassword },
+                  (result) => ack?.({ ...result, roomCode: code, hostToken, hostPassword }),
                 ),
               )
               .catch(() => ack?.({ ok: false, error: 'Could not reach the party server.' }));
@@ -176,7 +185,7 @@ export function createWsTransport() {
       }
 
       /* Joining (and rejoining after a refresh) opens the socket first. */
-      if (event === 'guest:join' || event === 'host:connect') {
+      if (event === 'guest:join' || event === 'host:connect' || event === 'host:reclaim') {
         const code = payload.roomCode;
         if (code) {
           if (!roomCode || roomCode !== code) {

@@ -18,8 +18,12 @@ YouTube Data API key never leaves the server.
 | | |
 |---|---|
 | 🎶 **Shared queue** | One queue for the whole room, synced live to every phone and the TV. |
+| 🔀 **Reorder from the TV** | The host can drag the order around with ▲ ▼ right on the host screen (and remove a song with ✕). |
 | 🔄 **Fair rotation** | Everyone's first song plays before anyone's second — one guest cannot hog the mic. |
 | 🧑‍🎤 **Singer names** | Every queue entry shows who is singing it, on the TV and on every phone. |
+| 🔑 **Host password** | Every room gets a 6-digit password, shown on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
+| 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
+| 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
 | 💜 **Live reactions** | ❤️ 🔥 👏 😂 🎤 🎉 float up the TV screen and count towards the singer's score. |
 | 👏📢 **Applause & airhorn** | Synthesised with the Web Audio API (no audio files) — with a 2s anti-spam cooldown. |
@@ -28,6 +32,23 @@ YouTube Data API key never leaves the server.
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
 | ⚡ **Speed control** | 0.75x / 0.9x / 1x / 1.1x / 1.25x via the YouTube player API. |
 | 📺 **Fullscreen** | One button, neon-friendly, made for a TV. |
+
+### Getting back into your room
+
+Losing the room is the classic party-killer, so there are three ways back in:
+
+1. **Nothing to do** — the host screen and every phone keep their session for
+   **6 hours** in `localStorage`. Press *back*, close the tab, lock the phone,
+   come back hours later: you are still in the room, with the same name and
+   score.
+2. **The host password** — every room gets a 6-digit password, displayed on the
+   TV (with a *copy* button). On the landing screen the host can pick
+   *“I already have a room”* and type the code + password. Guests can do the
+   same from the join screen (*“I am the host”*) to get the host controls on
+   their phone.
+3. **The host-remote QR** — a second QR code on the TV that turns a phone into
+   the host remote (skip, reorder, speed).
+
 
 > **Heads-up:** embedded YouTube may show ads before or during a video. That is
 > expected — we deliberately do not try to block or strip them.
@@ -105,7 +126,8 @@ OnduKaraoke/
     └── src/
         ├── App.jsx           # routes
         ├── styles/neon.css   # the whole neon theme
-        ├── lib/              # realtime (socket.io | workers), sounds, config…
+        ├── lib/              # realtime (socket.io | workers), session (6h),
+        │                     #   sounds, config, confetti…
         ├── components/       # NeonTitle, QrPanel, YoutubePlayer, QueuePanel,
         │                     # Leaderboard, IntermissionOverlay, ReactionLayer,
         │                     # SummaryScreen, ToastDeck
@@ -234,6 +256,15 @@ npm run smoke:worker   # Cloudflare Worker + Durable Objects (30 checks)
    leaderboard are visible; `Fullscreen` works; `Start party` is required once.
 2. **Join** — scan the QR with two phones; both get the same room code and can
    see each other in the leaderboard.
+2b. **Host password** — the TV shows a 6-digit password; copy it, press *back*
+   on the TV, then use *"I already have a room"* with the code + password → you
+   are back in the same room, with the queue intact.
+2c. **Sessions** — reload the TV and a phone: both come back automatically
+   (within 6 hours) with the same room/name.
+2d. **Reorder** — on the TV, use ▲ ▼ in the queue: the order changes for every
+   phone too.
+2e. **Share** — *📤 Share* opens the system share sheet; *🔗 Copy link* copies
+   the join URL.
 3. **Search** — search a song; results show a thumbnail, title and channel;
    `＋ Add` queues it under your name; the TV queue updates instantly.
 4. **Fair rotation** — A queues 3 songs, B queues 1 → the queue shows

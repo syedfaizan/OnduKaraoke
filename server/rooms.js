@@ -15,6 +15,7 @@ import {
   computeSummary,
   createRoomState,
   finishSong,
+  randomHostPassword,
   randomRoomCode,
   removeSong,
   moveSong,
@@ -49,9 +50,12 @@ export {
 const rooms = new Map();
 
 export function createRoom() {
-  // The Node server mints the host secret up front and hands it to the host
-  // screen with the room (the Durable Object variant claims it on connect).
-  const room = createRoomState(randomRoomCode(), { hostToken: randomUUID() });
+  // The Node server mints the host secrets up front and hands them to the host
+  // screen with the room (the Durable Object variant claims them on connect).
+  const room = createRoomState(randomRoomCode(), {
+    hostToken: randomUUID(),
+    hostPassword: randomHostPassword(),
+  });
   rooms.set(room.code, room);
   return room;
 }

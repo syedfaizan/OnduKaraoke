@@ -155,6 +155,11 @@ export class Room {
       setAttachment(ws, { ...attachment, isHost: true });
       this.room.hostSocketId = attachment.id || null;
     }
+    if (type === 'host:reclaim' && ack?.ok) {
+      // The host came back with the 6-digit password.
+      setAttachment(ws, { ...attachment, isHost: true });
+      this.room.hostSocketId = attachment.id || null;
+    }
 
     await this.persist();
 

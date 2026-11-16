@@ -622,6 +622,116 @@ img {
   text-align: center;
 }
 
+/* --- share / copy --- */
+
+.share-row {
+  display: flex;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.share-btn {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* --- host password --- */
+
+.host-password {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 46, 196, 0.07);
+  border: 1px solid rgba(255, 46, 196, 0.35);
+  box-shadow: 0 0 18px rgba(255, 46, 196, 0.15);
+}
+
+.host-password-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.host-password-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pink);
+  text-shadow: var(--glow-pink);
+}
+
+.host-password-value {
+  margin: 0.25rem 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 46, 196, 0.9), 0 0 30px rgba(255, 46, 196, 0.5);
+}
+
+.host-password-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* --- rejoin with password (host screen landing) --- */
+
+.rejoin-card {
+  width: min(430px, 100%);
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rejoin-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rejoin-row .neon-input {
+  min-width: 0;
+}
+
+.rejoin-row .code-input {
+  flex: 0 0 38%;
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+
+.rejoin-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+  cursor: pointer;
+  text-align: center;
+}
+
+.link-btn:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .host-remote {
   margin-top: 0.2rem;
   padding-top: 0.7rem;
@@ -832,11 +942,24 @@ img {
   text-align: center;
 }
 
+/* The host screen drives the queue with a mouse — bigger buttons. */
+.queue-panel.queue-host .q-actions button {
+  width: 42px;
+  height: 42px;
+  font-size: 1rem;
+  border-radius: 11px;
+}
+
+.queue-panel.queue-host .q-actions button:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.55);
+  color: #fff;
+}
+
 /* phone variants of the queue — bigger touch targets */
 .queue-panel.queue-phone .q-thumb {
   width: 104px;
 }
-
 .queue-panel.queue-phone .q-title {
   font-size: 1rem;
 }

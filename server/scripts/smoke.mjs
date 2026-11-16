@@ -240,7 +240,33 @@ async function main() {
       );
     }
 
-    console.log('\n· reconnect keeps the name');
+    console.log('\n· host password + coming back');
+  check(
+    'the host gets a 6-digit password',
+    /^\d{6}$/.test(created.hostPassword || ''),
+    created.hostPassword,
+  );
+
+  const wrong = await ask(host, 'host:reclaim', {
+    roomCode: created.roomCode,
+    password: '000000',
+  });
+  check('a wrong password is rejected', wrong?.ok === false, JSON.stringify(wrong));
+
+  // A brand new connection (a different device) reclaims the room.
+  const comeback = io(URL);
+  await once(comeback, 'connect');
+  const reclaimed = await ask(comeback, 'guest:join', {
+    roomCode: created.roomCode,
+    name: 'Host again',
+    hostPassword: created.hostPassword,
+  });
+  check('the password gives you host rights', reclaimed?.isHost === true, JSON.stringify(reclaimed));
+
+  const hostOnly = await ask(asha, 'song:skip', { roomCode: created.roomCode });
+  check('a plain guest still cannot skip', hostOnly?.ok === false, JSON.stringify(hostOnly));
+
+  console.log('\n· reconnect keeps the name');
     ravi.disconnect();
     const raviAgain = io(URL);
     track(raviAgain);
@@ -258,12 +284,17 @@ async function main() {
     const ended = await waitFor(host, (s) => s.phase === 'ended', 'the night summary');
     const badges = (ended.summary?.badges || []).map((badge) => badge.title);
     check('summary has badges', badges.includes('Most Songs'), badges.join(', '));
-    check('summary has a leaderboard', (ended.summary?.leaderboard || []).length === 2);
+    check(
+      'summary has a leaderboard',
+      (ended.summary?.leaderboard || []).length === 3,
+      String((ended.summary?.leaderboard || []).length),
+    );
     check('totals are counted', ended.summary?.totals?.songs >= 1);
 
     host.disconnect();
     asha.disconnect();
     raviAgain.disconnect();
+    comeback.disconnect();
   } finally {
     server.kill();
   }
@@ -275,6 +306,9 @@ async function main() {
     console.log(`❌  ${failures} check(s) failed.`);
     process.exitCode = 1;
   }
+
+  // The websocket clients keep the event loop alive — leave explicitly.
+  process.exit(failures === 0 ? 0 : 1);
 }
 
 main().catch((err) => {

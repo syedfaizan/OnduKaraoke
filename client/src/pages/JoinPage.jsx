@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { socket } from '../lib/realtime.js';
 import { useToast } from '../lib/useToast.js';
 import { useConnected } from '../lib/useConnected.js';
+import { loadGuestSession, saveGuestSession } from '../lib/session.js';
 import NeonTitle from '../components/NeonTitle.jsx';
 import NameGate from '../components/controller/NameGate.jsx';
 import SearchTab from '../components/controller/SearchTab.jsx';
@@ -20,29 +21,11 @@ const TABS = [
 
 const SPEEDS = [0.75, 0.9, 1, 1.1, 1.25];
 
-/** The phone keeps its identity in sessionStorage → a refresh keeps your name. */
-function sessionKey(roomCode) {
-  return `ondu:${roomCode}:session`;
-}
-
-function loadSession(roomCode) {
-  try {
-    return JSON.parse(sessionStorage.getItem(sessionKey(roomCode))) || null;
-  } catch {
-    return null;
-  }
-}
-
-function saveSession(roomCode, data) {
-  try {
-    sessionStorage.setItem(sessionKey(roomCode), JSON.stringify(data));
-  } catch {
-    // ignore
-  }
-}
-
 /**
  * The phone controller: join a room, queue songs, send reactions.
+ *
+ * The guest identity is kept in localStorage for 6 hours, so closing the app
+ * and coming back later puts you back in the room with the same name.
  */
 export default function JoinPage() {
   const { roomCode: paramCode } = useParams();
@@ -61,33 +44,49 @@ export default function JoinPage() {
   const { toasts, show } = useToast();
   const connected = useConnected();
 
-  /** Join (or re-join) the room. `silent` keeps the current screen while reconnecting. */
+  /**
+   * Join (or re-join) the room.
+   * `silent` keeps the current screen while reconnecting, `password` makes the
+   * guest the host (the 6-digit password).
+   */
   const join = useCallback(
-    (name, silent = false) => {
+    (name, silent = false, password = '') => {
       if (!roomCode) return;
 
-      const stored = loadSession(roomCode);
+      const stored = loadGuestSession(roomCode);
       const hostToken = stored?.hostToken || urlHostToken || undefined;
 
       if (!silent) setPhase('joining');
 
-      socket.emit('guest:join', { roomCode, name, guestId: stored?.guestId, hostToken }, (ack) => {
-        if (!ack?.ok) {
-          if (!silent) {
-            setPhase('gate');
-            setError(ack?.error || 'Could not join the room.');
+      socket.emit(
+        'guest:join',
+        {
+          roomCode,
+          name,
+          guestId: stored?.guestId,
+          hostToken,
+          hostPassword: password || undefined,
+        },
+        (ack) => {
+          if (!ack?.ok) {
+            if (!silent) {
+              setPhase('gate');
+              setError(ack?.error || 'Could not join the room.');
+            }
+            return;
           }
-          return;
-        }
 
-        saveSession(roomCode, { guestId: ack.guestId, name: ack.name, hostToken });
-        setMe({ guestId: ack.guestId, name: ack.name, isHost: ack.isHost });
-        setState(ack.state);
-        setPhase('joined');
-        setError('');
-      });
+          saveGuestSession(roomCode, { guestId: ack.guestId, name: ack.name, hostToken });
+          setMe({ guestId: ack.guestId, name: ack.name, isHost: ack.isHost });
+          setState(ack.state);
+          setPhase('joined');
+          setError('');
+
+          if (ack.isHost && password) show('Host mode on 🎧');
+        },
+      );
     },
-    [roomCode, urlHostToken],
+    [roomCode, urlHostToken, show],
   );
 
   /* Rejoin automatically after a refresh or a Wi-Fi blip. */
@@ -95,7 +94,7 @@ export default function JoinPage() {
     if (!roomCode) return undefined;
 
     const onConnect = () => {
-      const stored = loadSession(roomCode);
+      const stored = loadGuestSession(roomCode);
       if (!stored) return;
       join(stored.name, true);
     };
@@ -155,7 +154,7 @@ export default function JoinPage() {
       <>
         <NameGate
           roomCode={roomCode}
-          onJoin={(name) => join(name)}
+          onJoin={(name, password) => join(name, false, password)}
           joining={phase === 'joining'}
           error={error}
           connected={connected}

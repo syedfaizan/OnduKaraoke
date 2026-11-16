@@ -26,6 +26,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config();
 
 import * as rooms from './rooms.js';
+import { handleCommand } from '../shared/commands.js';
 import { searchKaraoke, randomKaraokeSong, YouTubeError } from './youtube.js';
 
 const PORT = Number(process.env.PORT || 3001);
@@ -184,6 +185,41 @@ function sanitizeSong(song) {
   };
 }
 
+/**
+ * Run one client command against a room and answer with the acknowledgement.
+ */
+async function runCommand(socket, type, payload = {}, ack) {
+  const room = rooms.getRoom(payload.roomCode);
+  if (!room) return fail(ack, 'Room not found.');
+
+  const guest = rooms.guestForSocket(room, socket.id);
+  const actor = {
+    socketId: socket.id,
+    guest,
+    isHost: room.hostSocketId === socket.id || Boolean(guest?.isHost),
+  };
+
+  const api = {
+    buildState: () => rooms.buildState(room),
+    randomSong: (language) => randomKaraokeSong(language),
+    emitReaction: (emoji) => io.to(room.code).emit('reaction:burst', { emoji }),
+    emitSound: (soundType) => io.to(room.code).emit('sound:play', { type: soundType }),
+    touch: () => rooms.touch(room),
+  };
+
+  const result = await handleCommand({ room, type, payload, actor, api });
+
+  // A joining/reclaiming host must be in the room's socket channel.
+  if (result?.ok && (type === 'host:connect' || type === 'host:reclaim' || type === 'guest:join')) {
+    socket.join(room.code);
+  }
+
+  rooms.touch(room);
+  broadcastState(room); // everyone gets the new state
+
+  if (typeof ack === 'function') ack(result);
+}
+
 io.on('connection', (socket) => {
   /* ---------------- host ---------------- */
 
@@ -197,248 +233,49 @@ io.on('connection', (socket) => {
     rooms.touch(room);
 
     if (ack) {
-      ack({ ok: true, roomCode: room.code, hostToken: room.hostToken, state: rooms.buildState(room) });
-    }
-  });
-
-  // Re-attach the host screen after a refresh (it keeps its token).
-  socket.on('host:connect', ({ roomCode, hostToken } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || room.hostToken !== hostToken) {
-      fail(ack, 'That room no longer exists (the server may have restarted) — create a new one.');
-      return;
-    }
-
-    room.hostSocketId = socket.id;
-    socket.join(room.code);
-    rooms.touch(room);
-
-    if (typeof ack === 'function') ack({ ok: true, state: rooms.buildState(room) });
-    broadcastState(room); // tell the phones the host screen is back
-  });
-
-  /* ---------------- guests ---------------- */
-
-  socket.on('guest:join', ({ roomCode, name, guestId, hostToken } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) {
-      fail(ack, 'Room not found — double-check the 4-letter code.');
-      return;
-    }
-
-    const returning = guestId ? room.guests.get(guestId) : null;
-    if (room.phase === 'ended' && !returning) {
-      fail(ack, 'This party has ended — ask the host to start a new one.');
-      return;
-    }
-
-    const cleanName = String(name || '').trim().slice(0, 24) || 'Guest';
-    const isHost = Boolean(hostToken && hostToken === room.hostToken);
-    const guest = rooms.upsertGuest(room, { guestId, name: cleanName, isHost, socketId: socket.id });
-
-    socket.join(room.code);
-    rooms.touch(room);
-
-    if (typeof ack === 'function') {
       ack({
         ok: true,
-        guestId: guest.id,
-        name: guest.name,
-        isHost: guest.isHost,
+        roomCode: room.code,
+        hostToken: room.hostToken,
+        hostPassword: room.hostPassword, // the 6-digit password the host can type to come back
         state: rooms.buildState(room),
       });
     }
-    broadcastState(room);
   });
 
-  /* ---------------- the queue ---------------- */
+  /* ---------------- every other command ---------------- */
 
-  socket.on('queue:add', ({ roomCode, song } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) return fail(ack, 'Room not found.');
-    if (room.phase === 'ended') return fail(ack, 'The party has ended 🎉');
+  /*
+   * All client commands run through the shared command handler, so the Node
+   * server and the Cloudflare Durable Object behave exactly the same
+   * (queue rotation, permissions, scoring, cooldown…).
+   */
+  const COMMANDS = [
+    'host:connect',
+    'host:reclaim',
+    'guest:join',
+    'queue:add',
+    'random:add',
+    'queue:remove',
+    'queue:move',
+    'party:start',
+    'song:started',
+    'song:ended',
+    'song:skip',
+    'speed:set',
+    'reaction:send',
+    'sound:play',
+    'party:end',
+  ];
 
-    const guest = rooms.guestForSocket(room, socket.id);
-    if (!guest) return fail(ack, 'Join the room first!');
-
-    const clean = sanitizeSong(song);
-    if (!clean) return fail(ack, 'That song looked broken — try searching again.');
-
-    const item = rooms.addSong(room, guest, clean);
-    rooms.touch(room);
-
-    // Party is running but the queue was empty → start the next song right away.
-    if (room.partyStarted && room.phase === 'idle') runAdvance(room);
-    else broadcastState(room);
-
-    if (typeof ack === 'function') ack({ ok: true, song: item });
-  });
-
-  // "Random" tab — the server picks a popular song in the chosen language.
-  socket.on('random:add', ({ roomCode, language } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) return fail(ack, 'Room not found.');
-    if (room.phase === 'ended') return fail(ack, 'The party has ended 🎉');
-
-    const guest = rooms.guestForSocket(room, socket.id);
-    if (!guest) return fail(ack, 'Join the room first!');
-
-    randomKaraokeSong(language)
-      .then((song) => {
-        const item = rooms.addSong(room, guest, song);
-        rooms.touch(room);
-        if (room.partyStarted && room.phase === 'idle') runAdvance(room);
-        else broadcastState(room);
-        if (typeof ack === 'function') ack({ ok: true, song: item });
-      })
-      .catch((err) => {
-        if (typeof ack === 'function') {
-          ack({ ok: false, error: err instanceof YouTubeError ? err.message : 'Random pick failed — try again.' });
-        }
+  for (const type of COMMANDS) {
+    socket.on(type, (payload = {}, ack) => {
+      runCommand(socket, type, payload, ack).catch((err) => {
+        console.error(`[${type}]`, err);
+        fail(ack, 'Something went wrong — try again.');
       });
-  });
-
-  socket.on('queue:remove', ({ roomCode, songId } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) return fail(ack, 'Room not found.');
-
-    const song = room.queue.find((item) => item.id === songId);
-    if (!song) return fail(ack, 'That song is already gone.');
-
-    const guest = rooms.guestForSocket(room, socket.id);
-    const host = isHostControl(socket, room);
-    if (!host && song.singerId !== guest?.id) {
-      return fail(ack, 'You can only remove your own songs.');
-    }
-
-    rooms.removeSong(room, songId);
-    rooms.touch(room);
-    broadcastState(room);
-    if (typeof ack === 'function') ack({ ok: true });
-  });
-
-  socket.on('queue:move', ({ roomCode, songId, dir } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) return fail(ack, 'Room not found.');
-    if (!isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-
-    if (!rooms.moveSong(room, songId, dir === -1 ? -1 : 1)) {
-      return fail(ack, 'That song is already gone.');
-    }
-
-    rooms.touch(room);
-    broadcastState(room);
-    done(ack);
-  });
-
-  /* ---------------- playback ---------------- */
-
-  socket.on('party:start', ({ roomCode } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-
-    room.partyStarted = true;
-    room.summary = null;
-    rooms.touch(room);
-
-    if (room.phase === 'idle') runAdvance(room);
-    else broadcastState(room);
-    done(ack);
-  });
-
-  // The host screen pressed play after the intermission countdown.
-  socket.on('song:started', ({ roomCode } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-    if (room.phase !== 'intermission') return fail(ack, 'No song is waiting to start.');
-
-    rooms.startSong(room);
-    rooms.touch(room);
-    broadcastState(room);
-    done(ack);
-  });
-
-  // The song is over (natural end or an embed that refused to play).
-  socket.on('song:ended', ({ roomCode, natural } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-
-    rooms.finishSong(room, { natural: Boolean(natural) });
-    runAdvance(room);
-    done(ack);
-  });
-
-  // Host pressed "skip".
-  socket.on('song:skip', ({ roomCode } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-    if (room.phase !== 'playing' && room.phase !== 'intermission') {
-      return fail(ack, 'Nothing is playing right now.');
-    }
-
-    rooms.finishSong(room, { natural: false });
-    runAdvance(room);
-    done(ack);
-  });
-
-  socket.on('speed:set', ({ roomCode, rate } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-
-    const allowed = [0.75, 0.9, 1, 1.1, 1.25];
-    if (!allowed.includes(rate)) return;
-
-    room.speed = rate;
-    rooms.touch(room);
-    broadcastState(room);
-    done(ack);
-  });
-
-  /* ---------------- reactions & sounds ---------------- */
-
-  socket.on('reaction:send', ({ roomCode, emoji } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || room.phase === 'ended') return fail(ack, 'The party is over 🎉');
-    if (!rooms.guestForSocket(room, socket.id)) return fail(ack, 'Join the room first!');
-
-    rooms.applyReaction(room, rooms.guestForSocket(room, socket.id).id);
-    rooms.touch(room);
-
-    io.to(room.code).emit('reaction:burst', { emoji: String(emoji || '❤️').slice(0, 8) });
-    broadcastState(room); // keeps the leaderboard and live counters fresh
-    done(ack);
-  });
-
-  socket.on('sound:play', ({ roomCode, type } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room) return fail(ack, 'Room not found.');
-    if (room.phase === 'ended') return fail(ack, 'The party has over 🎉');
-
-    const guest = rooms.guestForSocket(room, socket.id);
-    if (!guest) return fail(ack, 'Join the room first!');
-
-    const cooldown = rooms.canPlaySound(room, guest);
-    if (!cooldown.ok) {
-      return fail(ack, `Easy there, DJ! Try again in ${Math.ceil(cooldown.wait / 1000)}s 😉`);
-    }
-
-    rooms.touch(room);
-    io.to(room.code).emit('sound:play', { type: type === 'airhorn' ? 'airhorn' : 'applause' });
-    if (typeof ack === 'function') ack({ ok: true });
-  });
-
-  /* ---------------- end of night ---------------- */
-
-  socket.on('party:end', ({ roomCode } = {}, ack) => {
-    const room = rooms.getRoom(roomCode);
-    if (!room || !isHostControl(socket, room)) return fail(ack, 'Host controls only.');
-
-    room.phase = 'ended';
-    room.summary = rooms.computeSummary(room);
-    rooms.touch(room);
-    broadcastState(room);
-    done(ack);
-  });
+    });
+  }
 
   /* ---------------- disconnect ---------------- */
 
