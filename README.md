@@ -465,7 +465,8 @@ guest gets a 2-second cooldown per sound.
 | No sound on the TV | Press **Start party** (that click unlocks audio) and check the TV volume. |
 | A video will not play | Expected for some uploads — the host screen auto-skips to the next song. |
 | The room vanished (Node backend) | Rooms live in memory: restarting the server clears them. On Cloudflare a room survives restarts (Durable Object storage). |
-| The host screen lost the room after a reload | The room code is in `sessionStorage` — reopen the same URL. If the server restarted, create a new room. |
+| The host screen lost the room after a reload | It should come back on its own (6-hour session). If not, use *"I already have a room"* with the code + 6-digit password. |
+| The TV will not go fullscreen | Press <b>F</b> or click **⛶ Fullscreen**. iPhone/iPad Safari only allows fullscreen for video — use *Share → Add to Home Screen* there. |
 | `wrangler dev` shows a port conflict | Something else uses :8787 — stop it or pass `--port 8789`. |
 | The Worker build looks like the Node version | Deploy with `npm run deploy` (it builds with `VITE_REALTIME=ws`). |
 

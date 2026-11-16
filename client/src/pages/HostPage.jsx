@@ -153,6 +153,13 @@ export default function HostPage() {
       .catch(() => {});
   }, []);
 
+  // The realtime layer could not reach the backend — say why.
+  useEffect(() => {
+    const onError = (event) => show(event.detail || 'Lost the party server', 'error');
+    window.addEventListener('ondu:realtime-error', onError);
+    return () => window.removeEventListener('ondu:realtime-error', onError);
+  }, [show]);
+
   /* ---------------- actions ---------------- */
 
   const createRoom = useCallback(() => {
@@ -313,15 +320,52 @@ export default function HostPage() {
     [roomCode, show],
   );
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (document.fullscreenElement) {
-      document.exitFullscreen?.();
+      document.exitFullscreen?.().catch(() => {});
       return;
     }
-    document.documentElement.requestFullscreen?.().catch(() => {
-      show('Fullscreen was blocked — press F or use your browser menu', 'error');
+
+    // iOS Safari only allows fullscreen for video elements — tell the user
+    // what to do instead of failing silently.
+    if (!document.documentElement.requestFullscreen) {
+      show('This browser cannot go fullscreen — try Chrome, or add to the home screen 📱', 'error');
+      return;
+    }
+
+    const request = document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+
+    // Some browsers leave the request hanging instead of answering — give
+    // the host feedback either way.
+    Promise.race([
+      request.then(() => 'ok').catch((err) => err),
+      new Promise((resolve) => setTimeout(() => resolve('timeout'), 1500)),
+    ]).then((result) => {
+      if (result === 'ok') return;
+      if (result === 'timeout') {
+        show('Fullscreen did not answer — try the ⛶ button, or press F again', 'error');
+      } else {
+        show('Fullscreen was blocked — press F or use your browser menu', 'error');
+      }
     });
-  };
+  }, [show]);
+
+  /* Keyboard shortcuts for the TV: F = fullscreen. */
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [toggleFullscreen]);
 
   /* ---------------- react to the shared state ---------------- */
 
@@ -393,7 +437,7 @@ export default function HostPage() {
         )}
 
         <p className="landing-note">
-          Put this on the TV, press <b>F</b> for fullscreen, then let the phones scan the QR.
+          Put this on the TV and press <b>F</b> for fullscreen, then let the phones scan the QR.
           <br />
           YouTube may show an ad before a song — that&apos;s normal.
         </p>
@@ -446,7 +490,12 @@ export default function HostPage() {
             <span className="speed-note">⚡ speed only — embedded YouTube can&apos;t change pitch/key</span>
           </div>
 
-          <button type="button" className="btn btn-ghost" onClick={toggleFullscreen}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={toggleFullscreen}
+            title="Fullscreen (press F)"
+          >
             ⛶ Fullscreen
           </button>
           <button type="button" className="btn btn-danger" onClick={endParty}>

@@ -101,6 +101,12 @@ export function createWsTransport() {
     socket.addEventListener('error', () => {
       // The server is unreachable — let the UI show that.
       failed = true;
+      window.dispatchEvent(
+        new CustomEvent('ondu:realtime-error', {
+          detail:
+            'Cannot reach the party server. If you are running the Node backend, build with "npm run build" (this build targets Cloudflare Workers).',
+        }),
+      );
     });
   }
 

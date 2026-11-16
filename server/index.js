@@ -64,6 +64,20 @@ const io = new Server(httpServer, { cors: corsOptions });
 /* ------------------------------------------------------------------ */
 
 /**
+ * Create a room over HTTP — the same thing the Cloudflare Worker does, so
+ * the frontend works identically against either backend.
+ */
+app.post('/api/rooms', (_req, res) => {
+  const room = rooms.createRoom();
+  rooms.touch(room);
+  res.json({
+    roomCode: room.code,
+    hostToken: room.hostToken,
+    hostPassword: room.hostPassword,
+  });
+});
+
+/**
  * Song search. The phones talk to this endpoint (never to Google), so the
  * API key stays hidden and quota is spent from one place only.
  */
