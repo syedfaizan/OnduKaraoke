@@ -12,6 +12,7 @@ export default function QueuePanel({
   isHost = false,
   onRemove,
   onMove,
+  onSkip,
   variant = 'host',
 }) {
   return (
@@ -28,6 +29,14 @@ export default function QueuePanel({
               {current.singerName} <span className="q-reactions">❤️ {current.reactions || 0}</span>
             </span>
           </div>
+
+          {onSkip && (
+            <div className="q-actions">
+              <button type="button" onClick={onSkip} aria-label="Skip this song" title="Skip this song">
+                ⏭
+              </button>
+            </div>
+          )}
         </div>
       )}
 

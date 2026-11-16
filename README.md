@@ -18,7 +18,7 @@ YouTube Data API key never leaves the server.
 | | |
 |---|---|
 | 🎶 **Shared queue** | One queue for the whole room, synced live to every phone and the TV. |
-| 🔀 **Reorder from the TV** | The host can drag the order around with ▲ ▼ right on the host screen (and remove a song with ✕). |
+| 🔀 **Host controls** | The host reorders (▲ ▼) and removes (✕) songs right on the TV — and the host's phone gets the same controls in its Queue tab, plus ⏭ to skip. |
 | 🔄 **Fair rotation** | Everyone's first song plays before anyone's second — one guest cannot hog the mic. |
 | 🧑‍🎤 **Singer names** | Every queue entry shows who is singing it, on the TV and on every phone. |
 | 🔑 **Host password** | Every room gets a 6-digit password, shown on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
@@ -47,7 +47,8 @@ Losing the room is the classic party-killer, so there are three ways back in:
    same from the join screen (*“I am the host”*) to get the host controls on
    their phone.
 3. **The host-remote QR** — a second QR code on the TV that turns a phone into
-   the host remote (skip, reorder, speed).
+   the host remote: the phone's *Queue* tab then grows ▲ ▼ ✕ (reorder, remove)
+   and a ⏭ on the song that is playing.
 
 
 > **Heads-up:** embedded YouTube may show ads before or during a video. That is

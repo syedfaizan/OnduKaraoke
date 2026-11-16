@@ -19,14 +19,6 @@ const TABS = [
   { key: 'random', emoji: '🎲', label: 'Random' },
 ];
 
-const SPEEDS = [0.75, 0.9, 1, 1.1, 1.25];
-
-/**
- * The playback-speed control is hidden for now (the backend still supports
- * it — flip this back to true to bring the chips and the note back).
- */
-const SHOW_SPEED = false;
-
 /**
  * The phone controller: join a room, queue songs, send reactions.
  *
@@ -199,9 +191,6 @@ export default function JoinPage() {
 
   const isHost = Boolean(me?.isHost);
 
-  const skip = () => socket.emit('song:skip', { roomCode });
-  const setSpeed = (rate) => socket.emit('speed:set', { roomCode, rate });
-
   return (
     <div className="phone">
       <header className="phone-header">
@@ -212,38 +201,6 @@ export default function JoinPage() {
           {isHost && <span className="status-chip host-chip">🎧 Host</span>}
         </div>
       </header>
-
-      {isHost && (
-        <div className="host-bar card">
-          <div className="host-bar-row">
-            <span className="host-bar-title">🎧 Host controls</span>
-            <button type="button" className="btn btn-pink" onClick={skip}>
-              ⏭ Skip
-            </button>
-          </div>
-
-          {SHOW_SPEED && (
-            <>
-              <div className="speed-chips">
-                {SPEEDS.map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    className={`chip ${state?.speed === rate ? 'active' : ''}`}
-                    onClick={() => setSpeed(rate)}
-                  >
-                    {rate}x
-                  </button>
-                ))}
-              </div>
-
-              <p className="speed-note">
-                ⚡ speed only — embedded YouTube can&apos;t change pitch/key
-              </p>
-            </>
-          )}
-        </div>
-      )}
 
       <main className="phone-body">
         {tab === 'search' && <SearchTab roomCode={roomCode} onToast={show} />}
