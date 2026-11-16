@@ -20,6 +20,12 @@ import ToastDeck from '../components/ToastDeck.jsx';
 const SPEEDS = [0.75, 0.9, 1, 1.1, 1.25];
 
 /**
+ * The playback-speed control is hidden for now (the backend still supports
+ * it — flip this back to true to bring the chips and the note back).
+ */
+const SHOW_SPEED = false;
+
+/**
  * "I already have a room" — the host comes back with the room code and the
  * 6-digit password (shown when the room was created).
  */
@@ -474,21 +480,25 @@ export default function HostPage() {
             </button>
           )}
 
-          <div className="speed-group">
-            <div className="speed-chips">
-              {SPEEDS.map((rate) => (
-                <button
-                  key={rate}
-                  type="button"
-                  className={`chip ${state.speed === rate ? 'active' : ''}`}
-                  onClick={() => setSpeed(rate)}
-                >
-                  {rate}x
-                </button>
-              ))}
+          {SHOW_SPEED && (
+            <div className="speed-group">
+              <div className="speed-chips">
+                {SPEEDS.map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    className={`chip ${state.speed === rate ? 'active' : ''}`}
+                    onClick={() => setSpeed(rate)}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
+              <span className="speed-note">
+                ⚡ speed only — embedded YouTube can&apos;t change pitch/key
+              </span>
             </div>
-            <span className="speed-note">⚡ speed only — embedded YouTube can&apos;t change pitch/key</span>
-          </div>
+          )}
 
           <button
             type="button"

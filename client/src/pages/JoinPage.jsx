@@ -22,6 +22,12 @@ const TABS = [
 const SPEEDS = [0.75, 0.9, 1, 1.1, 1.25];
 
 /**
+ * The playback-speed control is hidden for now (the backend still supports
+ * it — flip this back to true to bring the chips and the note back).
+ */
+const SHOW_SPEED = false;
+
+/**
  * The phone controller: join a room, queue songs, send reactions.
  *
  * The guest identity is kept in localStorage for 6 hours, so closing the app
@@ -216,20 +222,26 @@ export default function JoinPage() {
             </button>
           </div>
 
-          <div className="speed-chips">
-            {SPEEDS.map((rate) => (
-              <button
-                key={rate}
-                type="button"
-                className={`chip ${state?.speed === rate ? 'active' : ''}`}
-                onClick={() => setSpeed(rate)}
-              >
-                {rate}x
-              </button>
-            ))}
-          </div>
+          {SHOW_SPEED && (
+            <>
+              <div className="speed-chips">
+                {SPEEDS.map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    className={`chip ${state?.speed === rate ? 'active' : ''}`}
+                    onClick={() => setSpeed(rate)}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
 
-          <p className="speed-note">⚡ speed only — embedded YouTube can&apos;t change pitch/key</p>
+              <p className="speed-note">
+                ⚡ speed only — embedded YouTube can&apos;t change pitch/key
+              </p>
+            </>
+          )}
         </div>
       )}
 

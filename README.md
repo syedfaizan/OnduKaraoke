@@ -30,7 +30,7 @@ YouTube Data API key never leaves the server.
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
-| ⚡ **Speed control** | 0.75x / 0.9x / 1x / 1.1x / 1.25x via the YouTube player API. |
+| ⚡ **Speed control** | *Hidden for now* — 0.75x…1.25x is still supported by the backend, flip `SHOW_SPEED` in `client/src/pages/HostPage.jsx` to bring the chips back. |
 | 📺 **Fullscreen** | One button, neon-friendly, made for a TV. |
 
 ### Getting back into your room
