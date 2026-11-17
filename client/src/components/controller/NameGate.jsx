@@ -37,7 +37,7 @@ export default function NameGate({ roomCode, onJoin, joining, error, connected }
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={24}
-          placeholder="e.g. Faizan"
+          placeholder="e.g. Alex"
           autoComplete="given-name"
           autoCapitalize="words"
         />
