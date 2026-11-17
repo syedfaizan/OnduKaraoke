@@ -3,8 +3,8 @@
  *
  * The GIFs live in `client/public/gifs` and are served by the same Worker as
  * the app — the TV never waits on a third-party CDN, and a party doesn't stop
- * working when someone's favourite GIF host goes down. They were rendered at
- * 240px and re-paletted so six animations stay sharp without being enormous.
+ * working when someone's favourite GIF host goes down. They are rendered at
+ * 170px and re-paletted so six animations stay light on the TV.
  *
  * `id` travels over the socket (`reaction:send` → `reaction:burst`). Old phones
  * that still send an emoji keep working: the host screen falls back to text.

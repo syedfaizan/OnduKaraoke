@@ -491,7 +491,7 @@ each guest gets a 2-second cooldown.
 The reaction GIFs live in `client/public/gifs` and are served by the same
 Worker, so the TV never waits on Giphy/Tenor. The set is Scuba Cat, Smiling
 Dog, Dancing Kitten, Dancing Dog, Crying Cat and Laughing Dog, rendered at
-240px (~4.2 MB total); swap the files and the ids in
+170px (~2.8 MB total); swap the files and the ids in
 `client/src/lib/reactions.js` if you want a different crowd.
 
 ---
