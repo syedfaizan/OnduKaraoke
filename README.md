@@ -26,7 +26,7 @@ YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float up the TV and count towards the singer's score. Self-hosted GIFs, no CDN. |
+| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float up the TV's side gutters (the video/lyrics stay clear) and count towards the singer's score. Self-hosted GIFs, no CDN. |
 | 👏 **Applause** | A real crowd recording (public-domain clip, ~3s) plays on the TV, with a 2s anti-spam cooldown. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |

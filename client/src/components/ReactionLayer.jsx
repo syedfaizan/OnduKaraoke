@@ -47,7 +47,15 @@ export default function ReactionLayer() {
         node.style.fontSize = `${44 + Math.random() * 42}px`;
       }
 
-      node.style.left = `${4 + Math.random() * 78}vw`;
+      // Memes only float up the two side gutters so the middle of the TV (the
+      // video and the lyrics) always stays readable. At the animation's peak
+      // 1.45x scale plus a ±15deg tilt a 10vw GIF grows ~8.9vw either side of
+      // its centre, so these bands end by ~19vw and start at ~81vw — the
+      // lyrics text runs from about 19vw to 76vw on a 16:9 screen.
+      node.style.left =
+        Math.random() < 0.5
+          ? `${2 + Math.random() * 3}vw` // 2–5vw  → right edge ≤ ~19vw
+          : `${85 + Math.random() * 3}vw`; // 85–88vw → left edge ≥ ~81vw
       node.style.setProperty('--tilt', `${Math.random() * 30 - 15}deg`);
       // 2s longer than the old emoji float so each meme has time to land.
       node.style.animationDuration = `${5.1 + Math.random() * 1.2}s`;
