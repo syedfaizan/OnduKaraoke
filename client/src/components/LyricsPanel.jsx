@@ -12,7 +12,7 @@ const SYNC_STEP = 0.5;
  * tears down the YouTube player. It fetches once per song, follows the
  * player's clock, and grows the line that is being sung right now.
  */
-export default function LyricsPanel({ song, active = false, getTime, startedAt }) {
+export default function LyricsPanel({ song, active = false, getTime, startedAt, onUnavailable }) {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('idle'); // idle | loading | ready | none | error
   const [error, setError] = useState('');
@@ -82,6 +82,14 @@ export default function LyricsPanel({ song, active = false, getTime, startedAt }
     const id = setInterval(tick, POLL_MS);
     return () => clearInterval(id);
   }, [active, videoId, status, getTime, startedAt]);
+
+  /* --- an unfindable song sends the TV back to the video after a beat --- */
+
+  useEffect(() => {
+    if (!active || status !== 'none' || !videoId) return undefined;
+    const id = setTimeout(() => onUnavailable?.(), 3000);
+    return () => clearTimeout(id);
+  }, [active, status, videoId, onUnavailable]);
 
   const activeIndex = useMemo(
     () => (data?.synced ? findLineIndex(data.lines, time + offset) : -1),
@@ -162,7 +170,7 @@ export default function LyricsPanel({ song, active = false, getTime, startedAt }
           <div className="lyrics-placeholder">
             <strong>🎤</strong>
             <p>No lyrics found for this one.</p>
-            <p className="lyrics-hint">The video tab still works 🎬</p>
+            <p className="lyrics-hint">Back to the video in a moment… 🎬</p>
           </div>
         )}
 

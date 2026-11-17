@@ -489,11 +489,21 @@ img {
 
 /* --- Video / Lyrics switch on the TV --- */
 
+.stage-topbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
 .stage-tabs {
   position: relative;
   z-index: 5;
   display: inline-flex;
-  align-self: flex-start;
+  flex: 0 0 auto;
   gap: 0.3rem;
   flex: 0 0 auto;
   padding: 0.25rem;
@@ -783,33 +793,90 @@ img {
 }
 
 .now-bar {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.55rem 0.95rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.9rem;
 }
 
 .nb-title {
+  flex: 1;
+  min-width: 0;
   font-weight: 700;
   color: #fff;
   text-shadow: var(--glow-cyan);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 46%;
 }
 
 .nb-singer {
+  flex: 0 0 auto;
   color: var(--pink);
   text-shadow: var(--glow-pink);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .nb-reactions {
-  margin-left: auto;
+  flex: 0 0 auto;
   color: var(--yellow);
   text-shadow: 0 0 12px rgba(255, 225, 77, 0.6);
+  white-space: nowrap;
+}
+
+/* --- who is up next (where the now-playing bar used to be) --- */
+
+.next-bar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 0.5rem 1rem;
+  border-color: rgba(168, 85, 255, 0.4);
+}
+
+.next-kicker {
+  flex: 0 0 auto;
+  color: var(--purple);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-shadow: var(--glow-purple);
+}
+
+.next-title {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.next-singer {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font-weight: 800;
+  white-space: nowrap;
+  text-shadow: var(--glow-cyan);
+}
+
+.next-empty {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.next-bar-empty {
+  opacity: 0.8;
 }
 
 /* --- QR column --- */
@@ -1873,6 +1940,14 @@ img {
     /* The page scrolls here, so the stage needs its own height or the
        lyrics list would stretch the whole screen. */
     height: min(72dvh, 620px);
+  }
+
+  .stage-topbar {
+    flex-wrap: wrap;
+  }
+
+  .now-bar {
+    flex-basis: 100%;
   }
 
   .player-frame {

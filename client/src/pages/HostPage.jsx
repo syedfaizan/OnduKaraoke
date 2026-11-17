@@ -277,6 +277,9 @@ export default function HostPage() {
   /** The player's clock — the lyrics panel follows this. */
   const getPlaybackTime = useCallback(() => player.current?.getCurrentTime?.() ?? null, []);
 
+  /** No lyrics for this song → quietly put the video back on the TV. */
+  const showVideo = useCallback(() => setView('video'), []);
+
   /* ---------------- sharing ---------------- */
 
   const copyText = useCallback(
@@ -458,6 +461,8 @@ export default function HostPage() {
     );
   }
 
+  const nextSong = state.queue?.[0];
+
   return (
     <div className="host">
       <header className="host-header">
@@ -533,25 +538,35 @@ export default function HostPage() {
         <section className="stage">
           {state.partyStarted ? (
             <>
-              <div className="stage-tabs" role="tablist" aria-label="Screen view">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === 'video'}
-                  className={view === 'video' ? 'active' : ''}
-                  onClick={() => setView('video')}
-                >
-                  🎬 Video
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === 'lyrics'}
-                  className={view === 'lyrics' ? 'active' : ''}
-                  onClick={() => setView('lyrics')}
-                >
-                  📝 Lyrics
-                </button>
+              <div className="stage-topbar">
+                <div className="stage-tabs" role="tablist" aria-label="Screen view">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'video'}
+                    className={view === 'video' ? 'active' : ''}
+                    onClick={() => setView('video')}
+                  >
+                    🎬 Video
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'lyrics'}
+                    className={view === 'lyrics' ? 'active' : ''}
+                    onClick={() => setView('lyrics')}
+                  >
+                    📝 Lyrics
+                  </button>
+                </div>
+
+                {state.current && state.phase === 'playing' && (
+                  <div className="now-bar card">
+                    <span className="nb-title">🎶 {state.current.title}</span>
+                    <span className="nb-singer">🎤 {state.current.singerName}</span>
+                    <span className="nb-reactions">❤️ {state.current.reactions || 0}</span>
+                  </div>
+                )}
               </div>
 
               <div className="stage-body">
@@ -566,6 +581,7 @@ export default function HostPage() {
                     active={view === 'lyrics'}
                     getTime={getPlaybackTime}
                     startedAt={state.startedAt}
+                    onUnavailable={showVideo}
                   />
                 </div>
               </div>
@@ -591,13 +607,19 @@ export default function HostPage() {
             </div>
           )}
 
-          {state.current && state.phase === 'playing' && (
-            <div className="now-bar card">
-              <span className="nb-title">🎶 {state.current.title}</span>
-              <span className="nb-singer">🎤 {state.current.singerName}</span>
-              <span className="nb-reactions">❤️ {state.current.reactions || 0}</span>
-            </div>
-          )}
+          {state.partyStarted &&
+            (nextSong ? (
+              <div className="next-bar card">
+                <span className="next-kicker">UP NEXT ⏭</span>
+                <span className="next-title">{nextSong.title}</span>
+                <span className="next-singer">🎤 {nextSong.singerName}</span>
+              </div>
+            ) : (
+              <div className="next-bar next-bar-empty card">
+                <span className="next-kicker">UP NEXT ⏭</span>
+                <span className="next-empty">Nobody queued yet — scan the QR 🎶</span>
+              </div>
+            ))}
         </section>
 
         <div className="right-col">

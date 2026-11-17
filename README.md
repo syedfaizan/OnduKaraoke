@@ -69,7 +69,12 @@ match prefers complete, time-synced lyrics by the original artist.
 Karaoke videos often have a long title card, so the words can drift a little.
 Use the **−½s / +½s** buttons in the lyrics header until the big line matches
 the singer; the offset resets for each song. If only plain lyrics exist they are
-shown without highlighting, and if nothing is found the TV says so plainly.
+shown without highlighting. If a song has no lyrics at all, the TV says so and
+quietly switches back to the video after 3 seconds (a service error does not —
+that keeps the *Try again* button).
+
+Next to the tabs you still see what is playing now; along the bottom of the
+stage a new card shows **UP NEXT** — the title and who is singing it.
 
 ---
 
