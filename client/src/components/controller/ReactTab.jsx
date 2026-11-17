@@ -56,7 +56,7 @@ export default function ReactTab({ roomCode, onToast }) {
             onClick={() => sendReaction(reaction.id)}
             aria-label={`Send ${reaction.label}`}
           >
-            <img src={reaction.gif} alt="" loading="lazy" />
+            <img src={reaction.gif} alt="" />
             <span>{reaction.label}</span>
           </button>
         ))}
