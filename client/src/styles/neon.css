@@ -454,6 +454,12 @@ img {
   min-height: 0;
 }
 
+/* The leaderboard must always get its natural height — never let a long
+   queue squeeze it off the bottom of a 16:9 TV screen. */
+.right-col .leaderboard {
+  flex: 0 0 auto;
+}
+
 .stage {
   position: relative;
   display: flex;
@@ -945,6 +951,56 @@ img {
   font-size: 0.85rem;
 }
 
+/* --- host tools accordion (keeps the TV column inside one screen) --- */
+
+.host-tools {
+  width: 100%;
+  border: 1px solid rgba(255, 46, 196, 0.32);
+  border-radius: 12px;
+  background: rgba(255, 46, 196, 0.05);
+}
+
+.host-tools > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--pink);
+  text-shadow: var(--glow-pink);
+}
+
+.host-tools > summary::-webkit-details-marker {
+  display: none;
+}
+
+.host-tools-chevron {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.host-tools[open] .host-tools-chevron {
+  transform: rotate(180deg);
+}
+
+.host-tools-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.host-tools .host-password {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0.2rem 0 0.35rem;
+}
+
 /* --- host password --- */
 
 .host-password {
@@ -1121,6 +1177,18 @@ img {
 
 .queue-panel.queue-host .queue-list {
   flex: 1;
+  /* A thin, visible scrollbar matters on a TV where you cannot hover. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 255, 0.55) transparent;
+}
+
+.queue-panel.queue-host .queue-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.queue-panel.queue-host .queue-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.55);
+  border-radius: 99px;
 }
 
 .queue-item {
@@ -1128,6 +1196,9 @@ img {
   align-items: center;
   gap: 0.65rem;
   padding: 0.45rem 0.55rem;
+  /* Keep each row full height. Without this, flexbox squashes every song
+     into a thin strip instead of letting .queue-list scroll. */
+  flex: 0 0 auto;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;

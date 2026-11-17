@@ -22,7 +22,7 @@ YouTube Data API key never leaves the server.
 | 🔄 **Fair rotation** | Everyone's first song plays before anyone's second — one guest cannot hog the mic. |
 | 📝 **Synced lyrics** | A **Video / Lyrics** toggle on the TV. The words are big, and the line being sung grows and glows. Free via LRCLIB — no API key. |
 | 🧑‍🎤 **Singer names** | Every queue entry shows who is singing it, on the TV and on every phone. |
-| 🔑 **Host password** | Every room gets a 6-digit password, shown on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
+| 🔑 **Host password** | Every room gets a 6-digit password, folded under *🔐 Host password & remote* on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
@@ -42,14 +42,19 @@ Losing the room is the classic party-killer, so there are three ways back in:
    **6 hours** in `localStorage`. Press *back*, close the tab, lock the phone,
    come back hours later: you are still in the room, with the same name and
    score.
-2. **The host password** — every room gets a 6-digit password, displayed on the
-   TV (with a *copy* button). On the landing screen the host can pick
+2. **The host password** — every room gets a 6-digit password. It lives in the
+   **🔐 Host password & remote** drawer under the join QR on the TV (open it,
+   then use the *copy* button). On the landing screen the host can pick
    *“I already have a room”* and type the code + password. Guests can do the
    same from the join screen (*“I am the host”*) to get the host controls on
    their phone.
-3. **The host-remote QR** — a second QR code on the TV that turns a phone into
-   the host remote: the phone's *Queue* tab then grows ▲ ▼ ✕ (reorder, remove)
-   and a ⏭ on the song that is playing.
+3. **The host-remote QR** — the same drawer also holds a second QR code that
+   turns a phone into the host remote: the phone's *Queue* tab then grows ▲ ▼ ✕
+   (reorder, remove) and a ⏭ on the song that is playing.
+
+The drawer is collapsed by default so the join QR, room code and share buttons
+fit on one TV screen without scrolling — and the right column keeps the
+leaderboard pinned in view while the queue scrolls under it.
 
 
 > **Heads-up:** embedded YouTube may show ads before or during a video. That is

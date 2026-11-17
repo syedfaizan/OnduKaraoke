@@ -83,33 +83,44 @@ export default function QrPanel({
         or open <span className="mono">{joinUrl}</span>
       </p>
 
-      {hostPassword && (
-        <div className="host-password">
-          <div className="host-password-head">
-            <span className="host-password-label">Host password</span>
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => onCopyPassword?.(hostPassword)}
-              title="Copy the password"
-            >
-              copy
-            </button>
-          </div>
-          <div className="host-password-value">{hostPassword}</div>
-          <p className="host-password-hint">
-            Write it down — use it to get back into this room if you press back
-            or close the tab.
-          </p>
-        </div>
-      )}
+      {/* Folded away by default so the QR + room code fit one TV screen. */}
+      {(hostPassword || hostQr) && (
+        <details className="host-tools">
+          <summary>
+            🔐 Host password &amp; remote
+            <span className="host-tools-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div className="host-tools-body">
+            {hostPassword && (
+              <div className="host-password">
+                <div className="host-password-head">
+                  <span className="host-password-label">Host password</span>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => onCopyPassword?.(hostPassword)}
+                    title="Copy the password"
+                  >
+                    copy
+                  </button>
+                </div>
+                <div className="host-password-value">{hostPassword}</div>
+                <p className="host-password-hint">
+                  Write it down — use it to get back into this room if you press back
+                  or close the tab.
+                </p>
+              </div>
+            )}
 
-      {hostQr && (
-        <div className="host-remote">
-          <h3>Host remote</h3>
-          <img className="qr-small" src={hostQr} alt="Scan to become the host remote" />
-          <p>Scan on the host&apos;s phone for skip, reorder and speed controls</p>
-        </div>
+            {hostQr && (
+              <div className="host-remote">
+                <h3>Host remote</h3>
+                <img className="qr-small" src={hostQr} alt="Scan to become the host remote" />
+                <p>Scan on the host&apos;s phone for skip, reorder and speed controls</p>
+              </div>
+            )}
+          </div>
+        </details>
       )}
     </aside>
   );
