@@ -5,8 +5,8 @@ A party karaoke web app with two screens:
 - **Host screen** (`/host`) — runs on the TV or laptop. Big YouTube player, a QR
   code that is always visible, the shared queue and a live leaderboard.
 - **Phone controller** (`/join/:roomCode`) — guests join by scanning the QR
-  code (or typing the 4-letter room code), queue songs, send reactions,
-  applaud and blow an airhorn.
+  code (or typing the 4-letter room code), queue songs, send cat/dog meme
+  reactions and send a round of applause.
 
 Everything is real-time via Socket.IO, the neon theme is pure CSS, and the
 YouTube Data API key never leaves the server.
@@ -26,8 +26,8 @@ YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | ❤️ 🔥 👏 😂 🎤 🎉 float up the TV screen and count towards the singer's score. |
-| 👏📢 **Applause & airhorn** | Synthesised with the Web Audio API (no audio files) — with a 2s anti-spam cooldown. |
+| 💜 **Live reactions** | Six cat/dog memes — Doge, Pop Cat, Keyboard Cat, Grumpy Cat, Bongo Cat, Cheems — float up the TV and count towards the singer's score. Self-hosted GIFs, no CDN. |
+| 👏 **Applause** | A real crowd recording (public-domain clip, ~3s) plays on the TV, with a 2s anti-spam cooldown. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
@@ -149,6 +149,9 @@ OnduKaraoke/
 │   └── scripts/smoke.mjs     # 33-check end-to-end test (npm run smoke:worker)
 └── client/
     ├── index.html
+    ├── public/               # self-hosted assets, served by the same Worker
+    │   ├── gifs/             #   cat/dog reaction memes (~875 KB total)
+    │   └── sounds/           #   applause.m4a (public domain, 3.2s)
     ├── vite.config.js        # dev proxy → backend (/api, /socket.io, /ws)
     ├── .env.example          # VITE_REALTIME / VITE_BACKEND_URL / VITE_API_URL
     └── src/
@@ -304,10 +307,11 @@ npm run smoke:worker   # Cloudflare Worker + Durable Objects (40 checks)
 6. **Intermission** — start the party; the fullscreen countdown reads
    "Get ready, <name>!" and the next song starts automatically.
 7. **Confetti** — when a song ends, confetti bursts before the intermission.
-8. **Reactions** — tap emojis on a phone; they float up the TV with random
-   positions and fade out; the leaderboard and the singer's reaction count go up.
-9. **Sounds** — applause and airhorn are audible on the TV; tapping twice in a
-   row shows the 2s cooldown instead of spamming.
+8. **Reactions** — tap a cat/dog meme on a phone; the GIF floats up the TV with
+   a random position, tilt and size, then fades out; the leaderboard and the
+   singer's reaction count go up.
+9. **Applause** — the real recording plays on the TV; tapping twice in a row
+   shows the 2s cooldown instead of spamming.
 10. **Speed** — 0.75x…1.25x changes the playback rate on the TV (pitch/key
     cannot be changed in an embedded YouTube player — that is why only speed
     is offered).
@@ -478,10 +482,16 @@ the order never jumps around while people watch.
 
 ### Sounds
 
-Applause and airhorn are **synthesised with the Web Audio API** — no audio
-files, nothing to license. The `AudioContext` is unlocked by the host's
-"Start party" click (browsers only allow sound after a user gesture) and each
-guest gets a 2-second cooldown per sound.
+Applause is a **real recording** — a 3.2-second excerpt of a public-domain
+applause clip (pdsounds.org, via Wikimedia Commons), shipped as
+`client/public/sounds/applause.m4a`. The `<audio>` element is unlocked by the
+host's "Start party" click (browsers only allow sound after a user gesture) and
+each guest gets a 2-second cooldown.
+
+The reaction GIFs live in `client/public/gifs` and are served by the same
+Worker, so the TV never waits on Giphy/Tenor. They are the usual meme suspects
+(Doge, Pop Cat, Keyboard Cat, Grumpy Cat, Bongo Cat, Cheems); swap the files
+and the ids in `client/src/lib/reactions.js` if you want a different crowd.
 
 ---
 

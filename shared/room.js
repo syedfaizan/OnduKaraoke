@@ -17,7 +17,7 @@
 /** "Get ready, <singer>!" countdown between songs. */
 export const INTERMISSION_MS = 5000;
 
-/** Anti-spam cooldown for applause / airhorn (per guest). */
+/** Anti-spam cooldown for the applause button (per guest). */
 export const SOUND_COOLDOWN_MS = 2000;
 
 /** 4-letter room codes — no I/L/O so nobody mistypes them. */
@@ -206,7 +206,7 @@ export function applyReaction(room, senderId) {
   }
 }
 
-/** 2 second per-guest cooldown so nobody can machine-gun the airhorn. */
+/** 2 second per-guest cooldown so nobody can machine-gun the applause. */
 export function canPlaySound(room, guest) {
   const wait = guest.lastSoundAt + SOUND_COOLDOWN_MS - Date.now();
   if (wait > 0) return { ok: false, wait };

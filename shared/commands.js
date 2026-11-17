@@ -255,7 +255,9 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       applyReaction(room, guest.id);
       api.touch?.();
 
-      api.emitReaction(String(payload.emoji || '❤️').slice(0, 8));
+      // `emoji` now carries a reaction id (e.g. "doge"); old clients may still
+      // send an emoji, which the host screen renders as plain text.
+      api.emitReaction(String(payload.emoji || 'doge').slice(0, 16));
       return { ok: true };
     }
 
@@ -269,7 +271,7 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       }
 
       api.touch?.();
-      api.emitSound(payload.type === 'airhorn' ? 'airhorn' : 'applause');
+      api.emitSound('applause');
       return { ok: true };
     }
 
