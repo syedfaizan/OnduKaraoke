@@ -3,8 +3,8 @@
  *
  * The GIFs live in `client/public/gifs` and are served by the same Worker as
  * the app — the TV never waits on a third-party CDN, and a party doesn't stop
- * working when someone's favourite GIF host goes down. They were downscaled to
- * 170px and re-paletted so six animations stay light on the TV.
+ * working when someone's favourite GIF host goes down. They were rendered at
+ * 240px and re-paletted so six animations stay sharp without being enormous.
  *
  * `id` travels over the socket (`reaction:send` → `reaction:burst`). Old phones
  * that still send an emoji keep working: the host screen falls back to text.
@@ -15,7 +15,7 @@ export const REACTIONS = [
   { id: 'dancing-kitten', gif: '/gifs/dancing-kitten.gif', label: 'Dancing Kitten' },
   { id: 'dancing-dog', gif: '/gifs/dancing-dog.gif', label: 'Dancing Dog' },
   { id: 'crying-cat', gif: '/gifs/crying-cat.gif', label: 'Crying Cat' },
-  { id: 'wow-dog', gif: '/gifs/wow-dog.gif', label: 'Wow Dog' },
+  { id: 'laughing-dog', gif: '/gifs/laughing-dog.gif', label: 'Laughing Dog' },
 ];
 
 export const REACTION_BY_ID = new Map(REACTIONS.map((reaction) => [reaction.id, reaction]));
@@ -28,7 +28,8 @@ const LEGACY_ALIASES = {
   'keyboard-cat': 'dancing-dog',
   'grumpy-cat': 'crying-cat',
   'bongo-cat': 'scuba-cat',
-  cheems: 'wow-dog',
+  cheems: 'laughing-dog',
+  'wow-dog': 'laughing-dog',
 };
 
 for (const [oldId, newId] of Object.entries(LEGACY_ALIASES)) {

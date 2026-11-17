@@ -49,7 +49,8 @@ export default function ReactionLayer() {
 
       node.style.left = `${4 + Math.random() * 78}vw`;
       node.style.setProperty('--tilt', `${Math.random() * 30 - 15}deg`);
-      node.style.animationDuration = `${3.1 + Math.random() * 1.2}s`;
+      // 2s longer than the old emoji float so each meme has time to land.
+      node.style.animationDuration = `${5.1 + Math.random() * 1.2}s`;
       node.addEventListener('animationend', () => node.remove());
 
       container.appendChild(node);

@@ -26,7 +26,7 @@ YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Wow Dog — float up the TV and count towards the singer's score. Self-hosted GIFs, no CDN. |
+| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float up the TV and count towards the singer's score. Self-hosted GIFs, no CDN. |
 | 👏 **Applause** | A real crowd recording (public-domain clip, ~3s) plays on the TV, with a 2s anti-spam cooldown. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
@@ -490,8 +490,8 @@ each guest gets a 2-second cooldown.
 
 The reaction GIFs live in `client/public/gifs` and are served by the same
 Worker, so the TV never waits on Giphy/Tenor. The set is Scuba Cat, Smiling
-Dog, Dancing Kitten, Dancing Dog, Crying Cat and Wow Dog, downscaled to 170px
-and 64 colours (~2.6 MB total); swap the files and the ids in
+Dog, Dancing Kitten, Dancing Dog, Crying Cat and Laughing Dog, rendered at
+240px (~4.2 MB total); swap the files and the ids in
 `client/src/lib/reactions.js` if you want a different crowd.
 
 ---
