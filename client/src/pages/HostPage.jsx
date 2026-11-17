@@ -10,6 +10,7 @@ import { clearHostSession, loadHostSession, saveHostSession } from '../lib/sessi
 import NeonTitle from '../components/NeonTitle.jsx';
 import QrPanel from '../components/QrPanel.jsx';
 import YoutubePlayer from '../components/YoutubePlayer.jsx';
+import LyricsPanel from '../components/LyricsPanel.jsx';
 import QueuePanel from '../components/QueuePanel.jsx';
 import Leaderboard from '../components/Leaderboard.jsx';
 import IntermissionOverlay from '../components/IntermissionOverlay.jsx';
@@ -99,6 +100,7 @@ export default function HostPage() {
   const [baseUrl, setBaseUrl] = useState('');
   const [cover, setCover] = useState(false); // hides YouTube's end screen between songs
   const [youtubeOk, setYoutubeOk] = useState(true);
+  const [view, setView] = useState('video'); // 'video' | 'lyrics' on the TV
   const player = useRef(null);
   const intermissionFor = useRef(null); // which song we are counting down for
   const { toasts, show } = useToast();
@@ -271,6 +273,9 @@ export default function HostPage() {
   };
 
   const setSpeed = (rate) => socket.emit('speed:set', { roomCode, rate });
+
+  /** The player's clock — the lyrics panel follows this. */
+  const getPlaybackTime = useCallback(() => player.current?.getCurrentTime?.() ?? null, []);
 
   /* ---------------- sharing ---------------- */
 
@@ -527,7 +532,44 @@ export default function HostPage() {
 
         <section className="stage">
           {state.partyStarted ? (
-            <YoutubePlayer ref={player} onEnded={handleSongEnded} />
+            <>
+              <div className="stage-tabs" role="tablist" aria-label="Screen view">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'video'}
+                  className={view === 'video' ? 'active' : ''}
+                  onClick={() => setView('video')}
+                >
+                  🎬 Video
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'lyrics'}
+                  className={view === 'lyrics' ? 'active' : ''}
+                  onClick={() => setView('lyrics')}
+                >
+                  📝 Lyrics
+                </button>
+              </div>
+
+              <div className="stage-body">
+                {/* Both views share one grid cell. The player stays mounted
+                    underneath the lyrics so audio never stops on a tab swap. */}
+                <div className="stage-view player-view">
+                  <YoutubePlayer ref={player} onEnded={handleSongEnded} />
+                </div>
+                <div className={`stage-view lyrics-view ${view === 'lyrics' ? '' : 'is-hidden'}`}>
+                  <LyricsPanel
+                    song={state.current}
+                    active={view === 'lyrics'}
+                    getTime={getPlaybackTime}
+                    startedAt={state.startedAt}
+                  />
+                </div>
+              </div>
+            </>
           ) : (
             <div className="stage-idle">
               <p className="stage-idle-title">Press “Start party” to let the mic go hot 🎤</p>

@@ -20,6 +20,7 @@ YouTube Data API key never leaves the server.
 | 🎶 **Shared queue** | One queue for the whole room, synced live to every phone and the TV. |
 | 🔀 **Host controls** | The host reorders (▲ ▼) and removes (✕) songs right on the TV — and the host's phone gets the same controls in its Queue tab, plus ⏭ to skip. |
 | 🔄 **Fair rotation** | Everyone's first song plays before anyone's second — one guest cannot hog the mic. |
+| 📝 **Synced lyrics** | A **Video / Lyrics** toggle on the TV. The words are big, and the line being sung grows and glows. Free via LRCLIB — no API key. |
 | 🧑‍🎤 **Singer names** | Every queue entry shows who is singing it, on the TV and on every phone. |
 | 🔑 **Host password** | Every room gets a 6-digit password, shown on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
@@ -53,6 +54,22 @@ Losing the room is the classic party-killer, so there are three ways back in:
 
 > **Heads-up:** embedded YouTube may show ads before or during a video. That is
 > expected — we deliberately do not try to block or strip them.
+
+### Video / Lyrics on the TV
+
+The stage has two tabs: **🎬 Video** (the normal YouTube player) and **📝 Lyrics**
+(big words). Switching tabs never stops the song — the player stays mounted
+behind the lyrics panel.
+
+Lyrics are looked up once per song from [LRCLIB](https://lrclib.net/) (free, no
+key) and cached for 24 hours. Karaoke-upload suffixes such as
+`(Karaoke Version) [HD Lyrics]` are stripped before searching, and the best
+match prefers complete, time-synced lyrics by the original artist.
+
+Karaoke videos often have a long title card, so the words can drift a little.
+Use the **−½s / +½s** buttons in the lyrics header until the big line matches
+the singer; the offset resets for each song. If only plain lyrics exist they are
+shown without highlighting, and if nothing is found the TV says so plainly.
 
 ---
 
@@ -230,12 +247,14 @@ npm run dev:worker   # build + wrangler dev on :8787
 Two suites — one per backend — both drive a real server over websockets:
 
 ```bash
-npm run smoke          # Node/Socket.IO backend (28 checks)
-npm run smoke:worker   # Cloudflare Worker + Durable Objects (30 checks)
+npm run smoke          # Node/Socket.IO backend (38 checks)
+npm run smoke:worker   # Cloudflare Worker + Durable Objects (40 checks)
 ```
 
 | Check | What it proves |
 |---|---|
+| lyrics parser | karaoke suffixes stripped, LRC timestamps parsed, current line found |
+| lyrics endpoint | both backends return synced lines for a known song |
 | host creates a room | 4-letter code, unique |
 | guests join with a name | guestId + name issued |
 | fair rotation | 3 songs by Asha + 1 by Ravi queue as A1, R1, A2, A3 |

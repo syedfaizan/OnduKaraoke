@@ -12,6 +12,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
+import { cleanSongTitle, parseLrc, findLineIndex } from '../../shared/lyrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3199;
@@ -29,6 +30,20 @@ function check(label, condition, extra = '') {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Pure parser checks — no network needed. */
+function checkLyricsHelpers() {
+  console.log('\n· lyrics parser');
+  const title = cleanSongTitle('Bohemian Rhapsody (Karaoke Version) [HD Lyrics]');
+  check('karaoke cruft is stripped from the title', title === 'Bohemian Rhapsody', title);
+
+  const lines = parseLrc(
+    '[ar:Queen]\n[00:01.50] Is this the real life?\n[00:03.00] Caught in a landslide\n',
+  );
+  check('LRC lines parse into seconds', lines.length === 2 && lines[0].time === 1.5, JSON.stringify(lines));
+  check('the current line follows playback', findLineIndex(lines, 2) === 0 && findLineIndex(lines, 3.2) === 1);
+  check('nothing is active before the first line', findLineIndex(lines, 0) === -1);
+}
 
 /** Latest room state per socket (the server broadcasts it on every change). */
 const latestState = new Map();
@@ -99,6 +114,8 @@ const song = (videoId, title) => ({
 });
 
 async function main() {
+  checkLyricsHelpers();
+
   console.log('Booting the backend…');
   const server = spawn(process.execPath, ['index.js'], {
     cwd: path.join(__dirname, '..'),
@@ -108,6 +125,18 @@ async function main() {
 
   try {
     if (!(await waitForHealth())) throw new Error('server did not come up');
+
+    console.log('\n· lyrics endpoint');
+    try {
+      const lyricsResponse = await fetch(`${URL}/api/lyrics?title=Bohemian%20Rhapsody`);
+      const lyrics = await lyricsResponse.json();
+      check('the lyrics endpoint answers', lyricsResponse.ok && typeof lyrics.found === 'boolean');
+      if (lyrics.found) {
+        check('synced lines come back for a known song', Boolean(lyrics.synced && lyrics.lines?.length));
+      }
+    } catch (err) {
+      check('the lyrics endpoint answers', false, err.message);
+    }
 
     const host = io(URL);
     const asha = io(URL);

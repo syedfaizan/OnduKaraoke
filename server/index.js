@@ -28,6 +28,7 @@ dotenv.config();
 import * as rooms from './rooms.js';
 import { handleCommand } from '../shared/commands.js';
 import { searchKaraoke, randomKaraokeSong, YouTubeError } from './youtube.js';
+import { fetchLyrics, LyricsError } from './lyrics.js';
 
 const PORT = Number(process.env.PORT || 3001);
 
@@ -92,6 +93,24 @@ app.get('/api/search', async (req, res) => {
     }
     console.error('[search] unexpected error:', err);
     res.status(500).json({ error: 'Search hit a snag — try again in a moment.' });
+  }
+});
+
+/**
+ * Time-synced lyrics for the song on the TV. Sourced from LRCLIB (no key) and
+ * cached for 24 hours, so a room only looks a song up once.
+ */
+app.get('/api/lyrics', async (req, res) => {
+  try {
+    const lyrics = await fetchLyrics({ title: req.query.title, artist: req.query.artist });
+    res.json(lyrics);
+  } catch (err) {
+    if (err instanceof LyricsError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    console.error('[lyrics] unexpected error:', err);
+    res.status(500).json({ error: 'Lyrics hit a snag — try again in a moment.' });
   }
 });
 

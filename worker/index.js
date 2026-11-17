@@ -12,8 +12,10 @@
 
 import { Room } from './room.js';
 import { searchKaraoke } from './youtube.js';
+import { fetchLyrics } from './lyrics.js';
 import { randomRoomCode, randomHostPassword } from '../shared/room.js';
 import { YouTubeError } from '../shared/youtube.js';
+import { LyricsError } from '../shared/lyrics.js';
 
 export { Room };
 
@@ -96,6 +98,23 @@ async function handleApi(request, env, url) {
       }
       console.error('[search]', err);
       return Response.json({ error: 'Search hit a snag — try again in a moment.' }, { status: 500 });
+    }
+  }
+
+  /* --- synced lyrics for the current song --- */
+  if (path === '/lyrics') {
+    try {
+      const lyrics = await fetchLyrics(
+        { title: url.searchParams.get('title'), artist: url.searchParams.get('artist') },
+        env,
+      );
+      return Response.json(lyrics);
+    } catch (err) {
+      if (err instanceof LyricsError) {
+        return Response.json({ error: err.message }, { status: err.status });
+      }
+      console.error('[lyrics]', err);
+      return Response.json({ error: 'Lyrics hit a snag — try again in a moment.' }, { status: 500 });
     }
   }
 

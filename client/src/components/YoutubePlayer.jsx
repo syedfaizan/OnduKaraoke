@@ -7,6 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
  *   player.load(videoId, startSeconds)  → start (or resume) a song
  *   player.stop()                       → stop playback
  *   player.setRate(rate)                → playback speed
+ *   player.getCurrentTime()             → where we are (drives the lyrics)
  *   player.loadedId                     → what is currently loaded
  *
  * Note: YouTube may play ads before/during the video. We accept that — we do
@@ -86,6 +87,14 @@ const YoutubePlayer = forwardRef(function YoutubePlayer({ onEnded }, ref) {
             player.current?.setPlaybackRate(nextRate);
           } catch {
             // Not ready yet — we re-apply the rate on PLAYING.
+          }
+        },
+        getCurrentTime() {
+          try {
+            const current = player.current?.getCurrentTime?.();
+            return Number.isFinite(current) ? current : null;
+          } catch {
+            return null;
           }
         },
         get loadedId() {
