@@ -11,7 +11,7 @@
  *   type   the command name
  *   payload the command arguments
  *   actor  { socketId, guest, isHost } — who is asking
- *   api    { randomSong, broadcastState, emitReaction, emitSound, touch }
+ *   api    { randomSong, broadcastState, emitReaction, touch }
  *
  * It returns the acknowledgement payload that is sent back to the client.
  */
@@ -20,7 +20,6 @@ import {
   addSong,
   advance,
   applyReaction,
-  canPlaySound,
   computeSummary,
   finishSong,
   moveSong,
@@ -246,7 +245,7 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       return { ok: true };
     }
 
-    /* ---------------- reactions & sounds ---------------- */
+    /* ---------------- reactions ---------------- */
 
     case 'reaction:send': {
       if (room.phase === 'ended') return fail('The party is over 🎉');
@@ -255,23 +254,9 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       applyReaction(room, guest.id);
       api.touch?.();
 
-      // `emoji` now carries a reaction id (e.g. "doge"); old clients may still
-      // send an emoji, which the host screen renders as plain text.
-      api.emitReaction(String(payload.emoji || 'doge').slice(0, 16));
-      return { ok: true };
-    }
-
-    case 'sound:play': {
-      if (room.phase === 'ended') return fail('The party is over 🎉');
-      if (!guest) return fail('Join the room first!');
-
-      const cooldown = canPlaySound(room, guest);
-      if (!cooldown.ok) {
-        return fail(`Easy there, DJ! Try again in ${Math.ceil(cooldown.wait / 1000)}s 😉`);
-      }
-
-      api.touch?.();
-      api.emitSound('applause');
+      // Memes travel by id ("dancing-dog"); the classic set sends the emoji
+      // itself. Anything unknown simply renders as text on the TV.
+      api.emitReaction(String(payload.emoji || '❤️').slice(0, 16));
       return { ok: true };
     }
 

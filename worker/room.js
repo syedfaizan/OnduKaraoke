@@ -133,7 +133,6 @@ export class Room {
       buildState: () => buildState(this.room),
       randomSong: (language) => randomKaraokeSong(language, this.env),
       emitReaction: (emoji) => this.broadcast({ type: 'reaction:burst', payload: { emoji } }),
-      emitSound: (soundType) => this.broadcast({ type: 'sound:play', payload: { type: soundType } }),
       touch: () => {
         this.room.lastActivity = Date.now();
       },

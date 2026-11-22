@@ -189,7 +189,7 @@ async function main() {
       playing.singerStats.find((s) => s.name === 'Asha')?.songsSung === 1,
     );
 
-    console.log('\n· reactions + sound cooldown');
+    console.log('\n· reactions — emoji and meme ids');
     const burst = once(host, 'reaction:burst');
     await ask(ravi, 'reaction:send', { roomCode: created.roomCode, emoji: '🔥' });
     check('reaction reaches the host screen', (await burst).emoji === '🔥');
@@ -208,10 +208,13 @@ async function main() {
       reacted.singerStats.find((s) => s.name === 'Ravi')?.reactionsSent === 1,
     );
 
-    const firstSound = await ask(ravi, 'sound:play', { roomCode: created.roomCode, type: 'applause' });
-    const secondSound = await ask(ravi, 'sound:play', { roomCode: created.roomCode, type: 'airhorn' });
-    check('first sound plays', firstSound?.ok === true);
-    check('second sound is cooled down', secondSound?.ok === false, JSON.stringify(secondSound));
+    // Meme ids travel the same path as the classic emoji.
+    const memeBurst = once(host, 'reaction:burst');
+    await ask(ravi, 'reaction:send', {
+      roomCode: created.roomCode,
+      emoji: 'dancing-dog',
+    });
+    check('a meme id reaches the host screen', (await memeBurst).emoji === 'dancing-dog');
 
     console.log('\n· host controls');
     await ask(host, 'speed:set', { roomCode: created.roomCode, rate: 1.25 });

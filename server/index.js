@@ -236,7 +236,6 @@ async function runCommand(socket, type, payload = {}, ack) {
     buildState: () => rooms.buildState(room),
     randomSong: (language) => randomKaraokeSong(language),
     emitReaction: (emoji) => io.to(room.code).emit('reaction:burst', { emoji }),
-    emitSound: (soundType) => io.to(room.code).emit('sound:play', { type: soundType }),
     touch: () => rooms.touch(room),
   };
 
@@ -297,7 +296,6 @@ io.on('connection', (socket) => {
     'song:skip',
     'speed:set',
     'reaction:send',
-    'sound:play',
     'party:end',
   ];
 

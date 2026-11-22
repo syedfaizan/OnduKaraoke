@@ -6,11 +6,12 @@ import { REACTIONS, REACTION_BY_ID } from '../lib/reactions.js';
 const MAX_ON_SCREEN = 10;
 
 /**
- * Floating cat/dog GIF reactions on the host screen.
+ * Floating reactions on the host screen: the six cat/dog GIFs plus plain-text
+ * emoji from the classic reaction set.
  *
  * Nodes are created directly in the DOM (no React re-render per reaction) —
  * that keeps the TV smooth when the crowd goes wild. An unknown payload falls
- * back to plain text, so phones on an older deploy still send something.
+ * back to text, so phones on an older deploy still send something.
  */
 export default function ReactionLayer({ spread = false }) {
   const layer = useRef(null);

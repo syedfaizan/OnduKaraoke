@@ -207,7 +207,7 @@ export default function JoinPage() {
         {tab === 'queue' && (
           <QueueTab state={state} me={me} roomCode={roomCode} onToast={show} />
         )}
-        {tab === 'react' && <ReactTab roomCode={roomCode} onToast={show} />}
+        {tab === 'react' && <ReactTab roomCode={roomCode} />}
         {tab === 'random' && <RandomTab roomCode={roomCode} onToast={show} />}
       </main>
 

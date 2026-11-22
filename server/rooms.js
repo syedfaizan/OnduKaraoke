@@ -9,9 +9,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   INTERMISSION_MS,
-  SOUND_COOLDOWN_MS,
   buildState,
-  canPlaySound,
   computeSummary,
   createRoomState,
   finishSong,
@@ -30,9 +28,7 @@ import {
 
 export {
   INTERMISSION_MS,
-  SOUND_COOLDOWN_MS,
   buildState,
-  canPlaySound,
   computeSummary,
   finishSong,
   removeSong,

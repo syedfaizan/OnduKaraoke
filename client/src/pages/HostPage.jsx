@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { socket } from '../lib/realtime.js';
 import { joinBaseUrl } from '../lib/joinUrl.js';
-import { unlockAudio, playSound } from '../lib/sounds.js';
 import { confettiBurst, confettiCelebration } from '../lib/confetti.js';
 import { useToast } from '../lib/useToast.js';
 import { useConnected } from '../lib/useConnected.js';
@@ -142,17 +141,14 @@ export default function HostPage() {
     };
 
     const onState = (next) => setState(next);
-    const onSound = ({ type }) => playSound(type);
 
     socket.on('connect', onConnect);
     socket.on('room:state', onState);
-    socket.on('sound:play', onSound);
     if (socket.connected) onConnect();
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('room:state', onState);
-      socket.off('sound:play', onSound);
     };
   }, [show]);
 
@@ -231,7 +227,6 @@ export default function HostPage() {
   );
 
   const startParty = () => {
-    unlockAudio(); // one click = the browser lets us make noise all night
     // Fullscreen needs this same click, and the crowd likes the big screen.
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
       document.documentElement

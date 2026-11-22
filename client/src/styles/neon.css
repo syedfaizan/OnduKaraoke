@@ -1888,6 +1888,46 @@ img {
 
 /* --- react tab --- */
 
+.react-heading {
+  margin: 0.95rem 0 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.react-heading:first-of-type {
+  margin-top: 0.6rem;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.55rem;
+}
+
+.emoji-btn {
+  min-height: 66px;
+  font-size: 2rem;
+  line-height: 1;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.emoji-btn:active {
+  transform: scale(0.92);
+}
+
+.emoji-btn:nth-child(odd) { border-color: rgba(255, 46, 196, 0.4); }
+.emoji-btn:nth-child(even) { border-color: rgba(0, 229, 255, 0.4); }
+
+.emoji-btn:nth-child(odd):hover { box-shadow: 0 0 16px rgba(255, 46, 196, 0.35); }
+.emoji-btn:nth-child(even):hover { box-shadow: 0 0 16px rgba(0, 229, 255, 0.35); }
+
 .reaction-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1931,16 +1971,6 @@ img {
 
 .reaction-btn:nth-child(odd):hover { box-shadow: 0 0 16px rgba(255, 46, 196, 0.35); }
 .reaction-btn:nth-child(even):hover { box-shadow: 0 0 16px rgba(0, 229, 255, 0.35); }
-
-.sound-row {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.sound-btn {
-  min-height: 84px;
-  font-size: 1.15rem;
-}
 
 /* --- random tab --- */
 

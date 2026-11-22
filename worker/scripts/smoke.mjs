@@ -223,7 +223,7 @@ async function main() {
       playing.singerStats.find((s) => s.name === 'Asha')?.songsSung === 1,
     );
 
-    console.log('\n· reactions + sound cooldown');
+    console.log('\n· reactions — emoji and meme ids');
     let burstEmoji = null;
     host.on('reaction:burst', (payload) => {
       burstEmoji = payload.emoji;
@@ -246,17 +246,10 @@ async function main() {
       reacted.singerStats.find((s) => s.name === 'Ravi')?.reactionsSent === 1,
     );
 
-    let soundType = null;
-    host.on('sound:play', (payload) => {
-      soundType = payload.type;
-    });
-    const firstSound = await ravi.emit('sound:play', { type: 'applause' });
-    await sleep(200);
-    check('the first sound plays', firstSound?.ok === true);
-    check('the host screen is told to play it', soundType === 'applause', String(soundType));
-
-    const secondSound = await ravi.emit('sound:play', { type: 'airhorn' });
-    check('the second sound is cooled down', secondSound?.ok === false, JSON.stringify(secondSound));
+    // Meme ids travel the same path as the classic emoji.
+    await ravi.emit('reaction:send', { emoji: 'dancing-dog' });
+    await sleep(300);
+    check('a meme id reaches the host screen', burstEmoji === 'dancing-dog', String(burstEmoji));
 
     console.log('\n· host controls');
     await host.emit('speed:set', { rate: 1.25 });

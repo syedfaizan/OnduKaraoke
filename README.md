@@ -3,13 +3,13 @@
 A party karaoke web app with two screens:
 
 - **Host screen** (`/host`) — runs on the TV or laptop. Big YouTube player, a QR
-  code that is always visible, the shared queue and a live leaderboard.
+  code for guests to scan, the shared queue and a live leaderboard.
 - **Phone controller** (`/join/:roomCode`) — guests join by scanning the QR
-  code (or typing the 4-letter room code), queue songs, send cat/dog meme
-  reactions and send a round of applause.
+  code (or typing the 4-letter room code), queue songs and send classic emoji
+  or cat/dog meme reactions.
 
-Everything is real-time via Socket.IO, the neon theme is pure CSS, and the
-YouTube Data API key never leaves the server.
+Everything is real-time — WebSockets on Cloudflare, Socket.IO on the local
+backend — and the YouTube Data API key never leaves the server.
 
 ---
 
@@ -26,8 +26,7 @@ YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float across the TV (in minimal mode they fly over the video; on the lyrics screen they stay in the side gutters) and count towards the singer's score. Self-hosted GIFs, no CDN. |
-| 👏 **Applause** | A real crowd recording (public-domain clip, ~3s) plays on the TV, with a 2s anti-spam cooldown. |
+| 💜 **Live reactions** | The six classic emoji (❤️ 🔥 👏 😂 🎤 🎉) and six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog. Both kinds float across the TV (in minimal mode they fly over the video; on the lyrics screen they stay in the side gutters) and count towards the singer's score. GIFs are self-hosted — no CDN. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
@@ -140,19 +139,18 @@ OnduKaraoke/
 │   ├── index.js              # REST + all socket events
 │   ├── rooms.js              # the in-memory Map of rooms
 │   ├── youtube.js            # injects the key + an in-memory cache
-│   ├── scripts/smoke.mjs     # 28-check end-to-end test (npm run smoke)
+│   ├── scripts/smoke.mjs     # 37-check end-to-end test (npm run smoke)
 │   └── package.json
 ├── worker/                   # backend B — Cloudflare Worker (the deployment)
 │   ├── index.js              # Static Assets + REST + /ws routing
 │   ├── room.js               # the Durable Object = one room
 │   ├── youtube.js            # injects the key + the Cache API cache
 │   ├── cache.js              # 24h cache on the Cache API
-│   └── scripts/smoke.mjs     # 33-check end-to-end test (npm run smoke:worker)
+│   └── scripts/smoke.mjs     # 38-check end-to-end test (npm run smoke:worker)
 └── client/
     ├── index.html
     ├── public/               # self-hosted assets, served by the same Worker
-    │   ├── gifs/             #   cat/dog reaction memes (~875 KB total)
-    │   └── sounds/           #   applause.m4a (public domain, 3.2s)
+    │   ├── gifs/             #   cat/dog reaction memes (~3.2 MB total)
     ├── vite.config.js        # dev proxy → backend (/api, /socket.io, /ws)
     ├── .env.example          # VITE_REALTIME / VITE_BACKEND_URL / VITE_API_URL
     └── src/
@@ -261,8 +259,8 @@ npm run dev:worker   # build + wrangler dev on :8787
 Two suites — one per backend — both drive a real server over websockets:
 
 ```bash
-npm run smoke           # Node/Socket.IO backend (38 checks)
-npm run smoke:worker    # Cloudflare Worker + Durable Objects (40 checks)
+npm run smoke           # Node/Socket.IO backend (37 checks)
+npm run smoke:worker    # Cloudflare Worker + Durable Objects (38 checks)
 npm run smoke:transport # browser transport: a second party gets a fresh socket (9 checks)
 ```
 
@@ -391,7 +389,7 @@ Phones scan the QR and join through the same URL. Done — one service.
 | `npm run dev:worker` | Build + run the Worker locally (wrangler dev, port 8787) |
 | `npm run deploy` | Build the client for Workers + deploy |
 | `npm run secret` | Add/update the `YOUTUBE_API_KEY` secret |
-| `npm run smoke:worker` | 30-check end-to-end test against `wrangler dev` |
+| `npm run smoke:worker` | 38-check end-to-end test against `wrangler dev` |
 | `npx wrangler tail` | Live logs from the Worker |
 
 ### Local development against the Worker
@@ -484,13 +482,10 @@ round 0, 2nd song round 1 …). A new song is inserted at the end of its round,
 so the queue plays *everyone's first song, then everyone's second song*, and
 the order never jumps around while people watch.
 
-### Sounds
+### Reactions
 
-Applause is a **real recording** — a 3.2-second excerpt of a public-domain
-applause clip (pdsounds.org, via Wikimedia Commons), shipped as
-`client/public/sounds/applause.m4a`. The `<audio>` element is unlocked by the
-host's "Start party" click (browsers only allow sound after a user gesture) and
-each guest gets a 2-second cooldown.
+The six classic emoji are declared in `client/src/lib/reactions.js` and render
+as plain floating text on the TV — quick to tap and free to load.
 
 The reaction GIFs live in `client/public/gifs` and are served by the same
 Worker, so the TV never waits on Giphy/Tenor. The set is Scuba Cat, Smiling

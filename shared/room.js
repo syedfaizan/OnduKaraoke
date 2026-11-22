@@ -17,9 +17,6 @@
 /** "Get ready, <singer>!" countdown between songs. */
 export const INTERMISSION_MS = 5000;
 
-/** Anti-spam cooldown for the applause button (per guest). */
-export const SOUND_COOLDOWN_MS = 2000;
-
 /** 4-letter room codes — no I/L/O so nobody mistypes them. */
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 
@@ -67,7 +64,6 @@ export function upsertGuest(room, { guestId, name, isHost = false, socketId }) {
     songsSung: 0,
     reactionsReceived: 0,
     reactionsSent: 0,
-    lastSoundAt: 0,
   };
   room.guests.set(guest.id, guest);
   return guest;
@@ -204,14 +200,6 @@ export function applyReaction(room, senderId) {
     if (singer) singer.reactionsReceived += 1;
     room.current.reactions = (room.current.reactions || 0) + 1;
   }
-}
-
-/** 2 second per-guest cooldown so nobody can machine-gun the applause. */
-export function canPlaySound(room, guest) {
-  const wait = guest.lastSoundAt + SOUND_COOLDOWN_MS - Date.now();
-  if (wait > 0) return { ok: false, wait };
-  guest.lastSoundAt = Date.now();
-  return { ok: true };
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,14 +1,19 @@
 /**
- * The six reaction memes.
+ * The reactions: the six classic emoji plus the six cat/dog memes.
  *
  * The GIFs live in `client/public/gifs` and are served by the same Worker as
  * the app — the TV never waits on a third-party CDN, and a party doesn't stop
  * working when someone's favourite GIF host goes down. They are rendered at
  * 170px and re-paletted so six animations stay light on the TV.
  *
- * `id` travels over the socket (`reaction:send` → `reaction:burst`). Old phones
- * that still send an emoji keep working: the host screen falls back to text.
+ * Both kinds travel the same way (`reaction:send` → `reaction:burst`): an id
+ * for a meme, the emoji itself for the classic set. The host screen renders
+ * anything it doesn't recognise as plain text.
  */
+
+/** The original emoji reactions — quick, and they cost nothing to load. */
+export const EMOJI_REACTIONS = ['❤️', '🔥', '👏', '😂', '🎤', '🎉'];
+
 export const REACTIONS = [
   { id: 'scuba-cat', gif: '/gifs/scuba-cat.gif', label: 'Scuba Cat' },
   { id: 'smiling-dog', gif: '/gifs/smiling-dog.gif', label: 'Smiling Dog' },
