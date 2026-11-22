@@ -56,7 +56,29 @@ export function createWsTransport() {
     });
   }
 
+  /** Drop the current socket without firing events for the room we left. */
+  function dropSocket() {
+    const old = ws;
+    ws = null;
+    pending.clear(); // acks for the room we are leaving can never arrive
+    if (!old) return;
+    try {
+      old.close();
+    } catch {
+      /* already gone */
+    }
+  }
+
   function connect(code) {
+    /*
+     * Starting a new party after "End party" reuses this transport, so the
+     * socket is still bound to the old room. Opening (or keeping) that socket
+     * would send the new room's host:connect to the old Durable Object, which
+     * rejects it — the host then saw "Could not create a room". Switch rooms
+     * by replacing the socket.
+     */
+    if (roomCode && roomCode !== code) dropSocket();
+
     roomCode = code;
 
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -68,12 +90,14 @@ export function createWsTransport() {
     ws = socket;
 
     socket.addEventListener('open', () => {
+      if (ws !== socket) return; // a socket for a room we already left
       reconnectDelay = 500;
       failed = false;
       emitLocal('connect');
     });
 
     socket.addEventListener('message', (event) => {
+      if (ws !== socket) return;
       let message;
       try {
         message = JSON.parse(event.data);
@@ -94,11 +118,13 @@ export function createWsTransport() {
     });
 
     socket.addEventListener('close', (event) => {
+      if (ws !== socket) return;
       emitLocal('disconnect');
       if (!closed) scheduleReconnect();
     });
 
     socket.addEventListener('error', () => {
+      if (ws !== socket) return;
       // The server is unreachable — let the UI show that.
       failed = true;
       window.dispatchEvent(
@@ -194,11 +220,7 @@ export function createWsTransport() {
       if (event === 'guest:join' || event === 'host:connect' || event === 'host:reclaim') {
         const code = payload.roomCode;
         if (code) {
-          if (!roomCode || roomCode !== code) {
-            closed = true;
-            ws?.close();
-            connect(code);
-          }
+          connect(code); // opens the socket, or replaces it when the room changed
           whenOpen()
             .then(() => sendCommand(event, payload, ack))
             .catch(() => ack?.({ ok: false, error: 'Could not reach the party server.' }));

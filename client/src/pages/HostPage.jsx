@@ -101,6 +101,7 @@ export default function HostPage() {
   const [cover, setCover] = useState(false); // hides YouTube's end screen between songs
   const [youtubeOk, setYoutubeOk] = useState(true);
   const [view, setView] = useState('video'); // 'video' | 'lyrics' on the TV
+  const [panelsOpen, setPanelsOpen] = useState(false); // minimal mode → the TV is all player
   const player = useRef(null);
   const intermissionFor = useRef(null); // which song we are counting down for
   const { toasts, show } = useToast();
@@ -108,6 +109,13 @@ export default function HostPage() {
 
   const roomCode = session?.roomCode;
   const hostToken = session?.hostToken;
+
+  /**
+   * Minimal mode: once the party is running the TV belongs to the video, so
+   * the QR / queue / leaderboard columns fold away. The host can bring them
+   * back with the "Panels" button (and the phones keep working either way).
+   */
+  const minimal = Boolean(state?.partyStarted) && !panelsOpen;
 
   /* ---------------- socket wiring ---------------- */
 
@@ -178,7 +186,7 @@ export default function HostPage() {
 
     socket.emit('host:create', (ack) => {
       if (!ack?.ok) {
-        show('Could not create a room — is the backend running?', 'error');
+        show(ack?.error || 'Could not create a room — is the backend running?', 'error');
         return;
       }
       const saved = {
@@ -224,6 +232,13 @@ export default function HostPage() {
 
   const startParty = () => {
     unlockAudio(); // one click = the browser lets us make noise all night
+    // Fullscreen needs this same click, and the crowd likes the big screen.
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement
+        .requestFullscreen({ navigationUI: 'hide' })
+        .catch(() => {}); // blocked? the ⛶ button / F still work
+    }
+    setPanelsOpen(false); // minimal mode from the first song
     socket.emit('party:start', { roomCode });
   };
 
@@ -464,7 +479,7 @@ export default function HostPage() {
   const nextSong = state.queue?.[0];
 
   return (
-    <div className="host">
+    <div className={`host${minimal ? ' minimal' : ''}`}>
       <header className="host-header">
         <NeonTitle size="lg" />
 
@@ -518,6 +533,16 @@ export default function HostPage() {
           >
             ⛶ Fullscreen
           </button>
+          {state.partyStarted && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setPanelsOpen((open) => !open)}
+              title={minimal ? 'Show the QR, queue and leaderboard' : 'Hide the side panels'}
+            >
+              {minimal ? '▤ Panels' : '▣ Minimal'}
+            </button>
+          )}
           <button type="button" className="btn btn-danger" onClick={endParty}>
             ⏹ End party
           </button>
@@ -643,7 +668,7 @@ export default function HostPage() {
         />
       )}
 
-      <ReactionLayer />
+      <ReactionLayer spread={minimal && view === 'video'} />
       <ToastDeck toasts={toasts} />
     </div>
   );

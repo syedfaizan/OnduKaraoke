@@ -12,8 +12,11 @@ const MAX_ON_SCREEN = 10;
  * that keeps the TV smooth when the crowd goes wild. An unknown payload falls
  * back to plain text, so phones on an older deploy still send something.
  */
-export default function ReactionLayer() {
+export default function ReactionLayer({ spread = false }) {
   const layer = useRef(null);
+  // Read the latest prop inside the socket handler without re-subscribing.
+  const spreadRef = useRef(spread);
+  spreadRef.current = spread;
 
   useEffect(() => {
     // Warm the cache once so the first reaction doesn't pop in half-loaded.
@@ -47,15 +50,19 @@ export default function ReactionLayer() {
         node.style.fontSize = `${44 + Math.random() * 42}px`;
       }
 
-      // Memes only float up the two side gutters so the middle of the TV (the
-      // video and the lyrics) always stays readable. At the animation's peak
-      // 1.45x scale plus a ±15deg tilt a 10vw GIF grows ~8.9vw either side of
-      // its centre, so these bands end by ~19vw and start at ~81vw — the
-      // lyrics text runs from about 19vw to 76vw on a 16:9 screen.
-      node.style.left =
-        Math.random() < 0.5
-          ? `${2 + Math.random() * 3}vw` // 2–5vw  → right edge ≤ ~19vw
-          : `${85 + Math.random() * 3}vw`; // 85–88vw → left edge ≥ ~81vw
+      /*
+       * Minimal mode with the video on screen: the memes may fly anywhere
+       * (over the player — that's half the fun). Otherwise they only float up
+       * the two side gutters so the lyrics stay readable.
+       */
+      if (spreadRef.current) {
+        node.style.left = `${3 + Math.random() * 79}vw`;
+      } else {
+        node.style.left =
+          Math.random() < 0.5
+            ? `${2 + Math.random() * 3}vw` // 2–5vw  → right edge ≤ ~19vw
+            : `${85 + Math.random() * 3}vw`; // 85–88vw → left edge ≥ ~81vw
+      }
       node.style.setProperty('--tilt', `${Math.random() * 30 - 15}deg`);
       // 2s longer than the old emoji float so each meme has time to land.
       node.style.animationDuration = `${5.1 + Math.random() * 1.2}s`;

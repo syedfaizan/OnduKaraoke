@@ -460,6 +460,71 @@ img {
   flex: 0 0 auto;
 }
 
+/* --------------------------------------------------------------------------
+   Minimal party mode
+   Once the party is running the video is the show: the QR / queue /
+   leaderboard columns fold away and the player gets the whole 16:9 screen.
+   "▤ Panels" (or a phone) brings them back.
+   -------------------------------------------------------------------------- */
+
+.host.minimal .host-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.host.minimal .qr-panel,
+.host.minimal .right-col {
+  display: none;
+}
+
+/* Slimmer chrome = a taller video. */
+.host.minimal .host-header {
+  padding: 0.4rem 0.85rem;
+  gap: 0.6rem;
+}
+
+.host.minimal .host-header .neon-title.lg .neon-words {
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+}
+
+.host.minimal .stage {
+  gap: 0.35rem;
+}
+
+.host.minimal .stage-tabs button {
+  padding: 0.3rem 0.9rem;
+}
+
+.host.minimal .next-bar,
+.host.minimal .now-bar {
+  padding: 0.32rem 0.85rem;
+}
+
+.host.minimal .player-frame {
+  border-radius: 12px;
+}
+
+/* Hug the video: fill the height and let the width follow 16:9, so the neon
+   frame sits around the picture instead of stretching across black bars. */
+.host.minimal .player-view {
+  justify-content: center;
+}
+
+.host.minimal .player-frame {
+  flex: 0 0 auto;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+/* On a laptop the header would wrap into two rows — keep it to one. */
+@media (max-width: 1080px) {
+  .host.minimal .host-status .status-chip:not(.room-chip) {
+    display: none;
+  }
+}
+
 .stage {
   position: relative;
   display: flex;

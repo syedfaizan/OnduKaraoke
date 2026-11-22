@@ -16,7 +16,8 @@
     "dev:worker": "npm run build:worker && wrangler dev",
     "deploy": "npm run build:worker && wrangler deploy",
     "secret": "wrangler secret put YOUTUBE_API_KEY",
-    "smoke:worker": "node worker/scripts/smoke.mjs"
+    "smoke:worker": "node worker/scripts/smoke.mjs",
+    "smoke:transport": "node worker/scripts/transport.mjs"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

@@ -26,13 +26,14 @@ YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float up the TV's side gutters (the video/lyrics stay clear) and count towards the singer's score. Self-hosted GIFs, no CDN. |
+| 💜 **Live reactions** | Six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog — float across the TV (in minimal mode they fly over the video; on the lyrics screen they stay in the side gutters) and count towards the singer's score. Self-hosted GIFs, no CDN. |
 | 👏 **Applause** | A real crowd recording (public-domain clip, ~3s) plays on the TV, with a 2s anti-spam cooldown. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
 | ⚡ **Speed control** | *Hidden for now* — 0.75x…1.25x is still supported by the backend, flip `SHOW_SPEED` in `client/src/pages/HostPage.jsx` to bring the chips back. |
-| 📺 **Fullscreen** | One button, neon-friendly, made for a TV. |
+| 📺 **Fullscreen** | One button, neon-friendly, made for a TV. Pressing **Start party** goes fullscreen for you. |
+| 🖥 **Minimal mode** | The party runs on a video-first screen: the QR, queue and leaderboard fold away, the player fills the TV, and the memes fly over the video. **▤ Panels** brings them back. |
 
 ### Getting back into your room
 
@@ -260,8 +261,9 @@ npm run dev:worker   # build + wrangler dev on :8787
 Two suites — one per backend — both drive a real server over websockets:
 
 ```bash
-npm run smoke          # Node/Socket.IO backend (38 checks)
-npm run smoke:worker   # Cloudflare Worker + Durable Objects (40 checks)
+npm run smoke           # Node/Socket.IO backend (38 checks)
+npm run smoke:worker    # Cloudflare Worker + Durable Objects (40 checks)
+npm run smoke:transport # browser transport: a second party gets a fresh socket (9 checks)
 ```
 
 | Check | What it proves |
@@ -287,6 +289,8 @@ npm run smoke:worker   # Cloudflare Worker + Durable Objects (40 checks)
 
 1. **Host screen** — create a room; the QR code, room code, queue panel and
    leaderboard are visible; `Fullscreen` works; `Start party` is required once.
+   Starting the party should drop into **minimal mode** (video fills the TV,
+   fullscreen requested) — press **▤ Panels** to bring the QR/queue back.
 2. **Join** — scan the QR with two phones; both get the same room code and can
    see each other in the leaderboard.
 2b. **Host password** — the TV shows a 6-digit password; copy it, press *back*
