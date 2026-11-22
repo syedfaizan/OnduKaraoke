@@ -11,7 +11,7 @@
  *   type   the command name
  *   payload the command arguments
  *   actor  { socketId, guest, isHost } — who is asking
- *   api    { randomSong, broadcastState, emitReaction(emoji, url), touch }
+ *   api    { randomSong, broadcastState, emitReaction, touch }
  *
  * It returns the acknowledgement payload that is sent back to the client.
  */
@@ -27,7 +27,6 @@ import {
   startSong,
   upsertGuest,
 } from './room.js';
-import { isGiphyMediaUrl } from './memes.js';
 
 const fail = (error) => ({ ok: false, error });
 
@@ -255,11 +254,9 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       applyReaction(room, guest.id);
       api.touch?.();
 
-      // Memes travel by id ("dancing-dog"); the classic set sends the emoji
-      // itself. A GIPHY URL, when present, is validated here so the TV only
-      // ever loads images from GIPHY's CDN.
-      const url = isGiphyMediaUrl(payload.url) ? String(payload.url) : '';
-      api.emitReaction(String(payload.emoji || '❤️').slice(0, 16), url);
+      // Reactions are just emoji text — anything unknown renders as-is on the
+      // TV, so a phone on a newer deploy can still send an emoji we don't know.
+      api.emitReaction(String(payload.emoji || '❤️').slice(0, 16));
       return { ok: true };
     }
 

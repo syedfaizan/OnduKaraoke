@@ -235,7 +235,7 @@ async function runCommand(socket, type, payload = {}, ack) {
   const api = {
     buildState: () => rooms.buildState(room),
     randomSong: (language) => randomKaraokeSong(language),
-    emitReaction: (emoji, url) => io.to(room.code).emit('reaction:burst', { emoji, url }),
+    emitReaction: (emoji) => io.to(room.code).emit('reaction:burst', { emoji }),
     touch: () => rooms.touch(room),
   };
 

@@ -1928,63 +1928,134 @@ img {
 .emoji-btn:nth-child(odd):hover { box-shadow: 0 0 16px rgba(255, 46, 196, 0.35); }
 .emoji-btn:nth-child(even):hover { box-shadow: 0 0 16px rgba(0, 229, 255, 0.35); }
 
-.reaction-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.7rem;
+/* saved favourites — the count badge turns over as the night goes on */
+.top-emoji-btn {
+  position: relative;
 }
 
-.reaction-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.45rem 0.5rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.reaction-btn img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 13px;
-  background: #0d0d1c;
-}
-
-.reaction-btn span {
-  font-size: 0.7rem;
+.emoji-count {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
   color: var(--muted);
 }
 
-.reaction-btn:active {
-  transform: scale(0.94);
-}
-
-.reaction-btn:nth-child(odd) { border-color: rgba(255, 46, 196, 0.4); }
-.reaction-btn:nth-child(even) { border-color: rgba(0, 229, 255, 0.4); }
-
-.reaction-btn:nth-child(odd):hover { box-shadow: 0 0 16px rgba(255, 46, 196, 0.35); }
-.reaction-btn:nth-child(even):hover { box-shadow: 0 0 16px rgba(0, 229, 255, 0.35); }
-
-.attribution {
+.custom-emoji-tile {
+  position: relative;
   display: flex;
-  justify-content: center;
-  margin: 1rem 0 0;
-  opacity: 0.85;
 }
 
-.attribution:hover {
-  opacity: 1;
+.custom-emoji-tile .emoji-btn {
+  width: 100%;
 }
 
-.attribution img {
-  height: 26px;
+.custom-emoji-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.picker-toggle {
+  width: 100%;
+  margin: 1rem 0 0.5rem;
+  padding: 0.7rem;
+  border-radius: 12px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  color: var(--cyan);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.emoji-picker {
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: rgba(10, 10, 25, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emoji-search,
+.custom-emoji-row input {
+  min-width: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.emoji-search {
+  width: 100%;
+  margin-bottom: 0.6rem;
+}
+
+.emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.3rem;
+}
+
+.emoji-pick {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.emoji-pick:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.35);
+}
+
+.emoji-pick:active {
+  transform: scale(0.9);
+}
+
+.emoji-category h4 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.emoji-empty {
+  padding: 0.6rem 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.custom-emoji-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.custom-emoji-row input {
+  flex: 1;
+}
+
+.custom-emoji-error {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--danger);
 }
 
 /* --- random tab --- */

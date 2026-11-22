@@ -189,7 +189,7 @@ async function main() {
       playing.singerStats.find((s) => s.name === 'Asha')?.songsSung === 1,
     );
 
-    console.log('\n· reactions — emoji and meme ids');
+    console.log('\n· reactions — emoji');
     const burst = once(host, 'reaction:burst');
     await ask(ravi, 'reaction:send', { roomCode: created.roomCode, emoji: '🔥' });
     check('reaction reaches the host screen', (await burst).emoji === '🔥');
@@ -208,31 +208,13 @@ async function main() {
       reacted.singerStats.find((s) => s.name === 'Ravi')?.reactionsSent === 1,
     );
 
-    // Meme ids travel the same path as the classic emoji.
-    const memeBurst = once(host, 'reaction:burst');
+    // Custom emoji (or any emoji we don't know) travel the same path.
+    const customBurst = once(host, 'reaction:burst');
     await ask(ravi, 'reaction:send', {
       roomCode: created.roomCode,
-      emoji: 'dancing-dog',
+      emoji: '🪩',
     });
-    check('a meme id reaches the host screen', (await memeBurst).emoji === 'dancing-dog');
-
-    // A GIPHY url is forwarded; anything else is dropped before it reaches the TV.
-    const badBurst = once(host, 'reaction:burst');
-    await ask(ravi, 'reaction:send', {
-      roomCode: created.roomCode,
-      emoji: 'scuba-cat',
-      url: 'https://evil.example/track.gif',
-    });
-    check('an arbitrary GIF url is dropped', !(await badBurst).url);
-
-    const giphyUrl = 'https://media.giphy.com/media/abc123/giphy.gif';
-    const goodBurst = once(host, 'reaction:burst');
-    await ask(ravi, 'reaction:send', {
-      roomCode: created.roomCode,
-      emoji: 'scuba-cat',
-      url: giphyUrl,
-    });
-    check('a GIPHY url reaches the host screen', (await goodBurst).url === giphyUrl);
+    check('a custom emoji reaches the host screen', (await customBurst).emoji === '🪩');
 
     console.log('\n· host controls');
     await ask(host, 'speed:set', { roomCode: created.roomCode, rate: 1.25 });

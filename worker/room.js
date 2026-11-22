@@ -132,8 +132,7 @@ export class Room {
     const api = {
       buildState: () => buildState(this.room),
       randomSong: (language) => randomKaraokeSong(language, this.env),
-      emitReaction: (emoji, url) =>
-        this.broadcast({ type: 'reaction:burst', payload: { emoji, url } }),
+      emitReaction: (emoji) => this.broadcast({ type: 'reaction:burst', payload: { emoji } }),
       touch: () => {
         this.room.lastActivity = Date.now();
       },
