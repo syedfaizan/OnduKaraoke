@@ -1,27 +1,25 @@
 /**
  * The reactions: the six classic emoji plus the six cat/dog memes.
  *
- * The GIFs live in `client/public/gifs` and are served by the same Worker as
- * the app — the TV never waits on a third-party CDN, and a party doesn't stop
- * working when someone's favourite GIF host goes down. They are rendered at
- * 170px and re-paletted so six animations stay light on the TV.
+ * The meme ids and labels come from `shared/memes.js`; `gif` is the bundled
+ * fallback served by the same Worker. When a GIPHY key is configured the phone
+ * sends a GIPHY URL with the reaction and the TV uses that instead — with no
+ * key, or no network, everything keeps working from the local files.
  *
  * Both kinds travel the same way (`reaction:send` → `reaction:burst`): an id
  * for a meme, the emoji itself for the classic set. The host screen renders
  * anything it doesn't recognise as plain text.
  */
+import { MEME_REACTIONS } from '../../../shared/memes.js';
 
 /** The original emoji reactions — quick, and they cost nothing to load. */
 export const EMOJI_REACTIONS = ['❤️', '🔥', '👏', '😂', '🎤', '🎉'];
 
-export const REACTIONS = [
-  { id: 'scuba-cat', gif: '/gifs/scuba-cat.gif', label: 'Scuba Cat' },
-  { id: 'smiling-dog', gif: '/gifs/smiling-dog.gif', label: 'Smiling Dog' },
-  { id: 'dancing-kitten', gif: '/gifs/dancing-kitten.gif', label: 'Dancing Kitten' },
-  { id: 'dancing-dog', gif: '/gifs/dancing-dog.gif', label: 'Dancing Dog' },
-  { id: 'crying-cat', gif: '/gifs/crying-cat.gif', label: 'Crying Cat' },
-  { id: 'laughing-dog', gif: '/gifs/laughing-dog.gif', label: 'Laughing Dog' },
-];
+export const REACTIONS = MEME_REACTIONS.map(({ id, label }) => ({
+  id,
+  label,
+  gif: `/gifs/${id}.gif`,
+}));
 
 export const REACTION_BY_ID = new Map(REACTIONS.map((reaction) => [reaction.id, reaction]));
 

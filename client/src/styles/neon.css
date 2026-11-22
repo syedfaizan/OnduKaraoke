@@ -1972,6 +1972,21 @@ img {
 .reaction-btn:nth-child(odd):hover { box-shadow: 0 0 16px rgba(255, 46, 196, 0.35); }
 .reaction-btn:nth-child(even):hover { box-shadow: 0 0 16px rgba(0, 229, 255, 0.35); }
 
+.attribution {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0 0;
+  opacity: 0.85;
+}
+
+.attribution:hover {
+  opacity: 1;
+}
+
+.attribution img {
+  height: 26px;
+}
+
 /* --- random tab --- */
 
 .lang-grid {

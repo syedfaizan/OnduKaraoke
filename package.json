@@ -17,6 +17,7 @@
     "deploy": "npm run build:worker && wrangler deploy",
     "secret": "wrangler secret put YOUTUBE_API_KEY",
     "smoke:worker": "node worker/scripts/smoke.mjs",
+    "smoke:memes": "node worker/scripts/memes.mjs",
     "smoke:transport": "node worker/scripts/transport.mjs"
   },
   "devDependencies": {

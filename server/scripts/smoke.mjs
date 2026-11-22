@@ -216,6 +216,24 @@ async function main() {
     });
     check('a meme id reaches the host screen', (await memeBurst).emoji === 'dancing-dog');
 
+    // A GIPHY url is forwarded; anything else is dropped before it reaches the TV.
+    const badBurst = once(host, 'reaction:burst');
+    await ask(ravi, 'reaction:send', {
+      roomCode: created.roomCode,
+      emoji: 'scuba-cat',
+      url: 'https://evil.example/track.gif',
+    });
+    check('an arbitrary GIF url is dropped', !(await badBurst).url);
+
+    const giphyUrl = 'https://media.giphy.com/media/abc123/giphy.gif';
+    const goodBurst = once(host, 'reaction:burst');
+    await ask(ravi, 'reaction:send', {
+      roomCode: created.roomCode,
+      emoji: 'scuba-cat',
+      url: giphyUrl,
+    });
+    check('a GIPHY url reaches the host screen', (await goodBurst).url === giphyUrl);
+
     console.log('\n· host controls');
     await ask(host, 'speed:set', { roomCode: created.roomCode, rate: 1.25 });
     const sped = await waitFor(host, (s) => s.speed === 1.25, 'the new speed');

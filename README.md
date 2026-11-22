@@ -26,7 +26,7 @@ backend — and the YouTube Data API key never leaves the server.
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
 | 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
-| 💜 **Live reactions** | The six classic emoji (❤️ 🔥 👏 😂 🎤 🎉) and six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog. Both kinds float across the TV (in minimal mode they fly over the video; on the lyrics screen they stay in the side gutters) and count towards the singer's score. GIFs are self-hosted — no CDN. |
+| 💜 **Live reactions** | The six classic emoji (❤️ 🔥 👏 😂 🎤 🎉) and six cat/dog memes — Scuba Cat, Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat, Laughing Dog. Both kinds float across the TV (in minimal mode they fly over the video; on the lyrics screen they stay in the side gutters) and count towards the singer's score. Memes come from GIPHY when a key is set; the bundled GIFs are the offline fallback. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
@@ -134,23 +134,27 @@ OnduKaraoke/
 │   ├── room.js               # room state, fair queue, stats, badges
 │   ├── commands.js           # every command + who may run it
 │   ├── youtube.js            # YouTube search + 24h cache (cache injected)
+│   ├── giphy.js              # pure GIPHY helpers (search URL, response parsing)
+│   ├── memes.js              # meme ids, search terms, GIPHY url validation
 │   └── randomSongs.js        # language presets for the Random tab
 ├── server/                   # backend A — Express + Socket.IO (local dev / VPS)
 │   ├── index.js              # REST + all socket events
 │   ├── rooms.js              # the in-memory Map of rooms
 │   ├── youtube.js            # injects the key + an in-memory cache
-│   ├── scripts/smoke.mjs     # 37-check end-to-end test (npm run smoke)
+│   ├── scripts/smoke.mjs     # 39-check end-to-end test (npm run smoke)
 │   └── package.json
 ├── worker/                   # backend B — Cloudflare Worker (the deployment)
 │   ├── index.js              # Static Assets + REST + /ws routing
 │   ├── room.js               # the Durable Object = one room
 │   ├── youtube.js            # injects the key + the Cache API cache
 │   ├── cache.js              # 24h cache on the Cache API
-│   └── scripts/smoke.mjs     # 38-check end-to-end test (npm run smoke:worker)
+│   ├── scripts/memes.mjs     # pure GIPHY/url checks (npm run smoke:memes)
+│   └── scripts/smoke.mjs     # 40-check end-to-end test (npm run smoke:worker)
 └── client/
     ├── index.html
     ├── public/               # self-hosted assets, served by the same Worker
     │   ├── gifs/             #   cat/dog reaction memes (~3.2 MB total)
+    │   ├── giphy-powered.png #   GIPHY's approved attribution badge
     ├── vite.config.js        # dev proxy → backend (/api, /socket.io, /ws)
     ├── .env.example          # VITE_REALTIME / VITE_BACKEND_URL / VITE_API_URL
     └── src/
@@ -194,6 +198,23 @@ PORT=3001
 
 Without a key the app still runs — searching shows a friendly message
 ("Song search is not set up yet — the host needs to add YOUTUBE_API_KEY…").
+
+**Optional — live memes from GIPHY.** Create a free **Web** key at
+<https://developers.giphy.com/dashboard/> and restrict it to your app's domain
+(`localhost` for local dev), then put it in `client/.env` (see
+`client/.env.example`):
+
+```bash
+VITE_GIPHY_API_KEY=your_domain_restricted_giphy_web_key
+```
+
+Rebuild after changing it — Vite inlines it at build time. With a key, the six
+meme buttons show GIPHY's current pick for each cat/dog reaction; without one
+they use the self-hosted GIFs. GIPHY requires search calls to come from the
+browser and forbids caching results, so this is a **public, domain-restricted**
+key (never a server secret) and no `/api/memes` endpoint exists. The required
+required *"Powered by GIPHY"* badge (GIPHY's approved asset, in
+`client/public/giphy-powered.png`) is shown under the React tab.
 
 ### 3. Install
 
@@ -259,15 +280,18 @@ npm run dev:worker   # build + wrangler dev on :8787
 Two suites — one per backend — both drive a real server over websockets:
 
 ```bash
-npm run smoke           # Node/Socket.IO backend (37 checks)
-npm run smoke:worker    # Cloudflare Worker + Durable Objects (38 checks)
+npm run smoke           # Node/Socket.IO backend (39 checks)
+npm run smoke:worker    # Cloudflare Worker + Durable Objects (40 checks)
 npm run smoke:transport # browser transport: a second party gets a fresh socket (9 checks)
+npm run smoke:memes     # pure GIPHY URL/mapping checks (16 checks)
 ```
 
 | Check | What it proves |
 |---|---|
 | lyrics parser | karaoke suffixes stripped, LRC timestamps parsed, current line found |
 | lyrics endpoint | both backends return synced lines for a known song |
+| GIPHY mapping | six client-side searches, one per meme, mapped to stable ids; no caching |
+| reaction GIF urls | only `media*.giphy.com` urls reach the TV; arbitrary urls are dropped |
 | host creates a room | 4-letter code, unique |
 | guests join with a name | guestId + name issued |
 | fair rotation | 3 songs by Asha + 1 by Ravi queue as A1, R1, A2, A3 |
@@ -382,6 +406,10 @@ npm run deploy
 Then open the worker URL on the TV, press **Create a room** → **Start party**.
 Phones scan the QR and join through the same URL. Done — one service.
 
+For live memes, add `VITE_GIPHY_API_KEY` to `client/.env` *before* step 5 (or
+set it as a build-time env var in CI). It is baked into the JS bundle — a
+domain-restricted Web key, not a Worker secret.
+
 ### Useful commands
 
 | Command | What it does |
@@ -389,7 +417,8 @@ Phones scan the QR and join through the same URL. Done — one service.
 | `npm run dev:worker` | Build + run the Worker locally (wrangler dev, port 8787) |
 | `npm run deploy` | Build the client for Workers + deploy |
 | `npm run secret` | Add/update the `YOUTUBE_API_KEY` secret |
-| `npm run smoke:worker` | 38-check end-to-end test against `wrangler dev` |
+| `npm run smoke:worker` | 40-check end-to-end test against `wrangler dev` |
+| `npm run smoke:memes` | 16 pure checks for GIPHY mapping + url validation |
 | `npx wrangler tail` | Live logs from the Worker |
 
 ### Local development against the Worker
@@ -421,7 +450,9 @@ object time — free with a ~1000× margin.
 * The room state is written to SQLite storage on every change, so a room
   survives the object being evicted from memory.
 * The YouTube key is a **secret** (`wrangler secret put`), never a variable
-  in `wrangler.jsonc` and never in the client bundle.
+  in `wrangler.jsonc` and never in the client bundle. The optional GIPHY key is
+  the opposite: a public, domain-restricted Web key in the client bundle,
+  because GIPHY requires browser-side search calls.
 * YouTube ads are accepted as-is — we do not try to block them.
 * If you want your own domain: add it to the Worker in the dashboard
   (*Settings → Domains & Routes*) and the QR code follows automatically.
@@ -487,12 +518,19 @@ the order never jumps around while people watch.
 The six classic emoji are declared in `client/src/lib/reactions.js` and render
 as plain floating text on the TV — quick to tap and free to load.
 
-The reaction GIFs live in `client/public/gifs` and are served by the same
-Worker, so the TV never waits on Giphy/Tenor. The set is Scuba Cat, Smiling
-Dog, Dancing Kitten, Dancing Dog, Crying Cat and Laughing Dog, rendered at
-170px (~3.2 MB total) with one shared 64-colour palette each so no frame ever
-flashes a garbage palette on loop; swap the files and the ids in
-`client/src/lib/reactions.js` if you want a different crowd.
+The meme ids, labels and GIPHY search terms live in `shared/memes.js`. With a
+`VITE_GIPHY_API_KEY` in `client/.env`, the phone calls GIPHY's search endpoint
+directly (one small request per button, no cache — GIPHY's terms require it),
+shows the ~200px rendition and sends the image URL with the reaction. The
+server only forwards URLs from `media*.giphy.com`, so a guest cannot point the
+TV at an arbitrary image.
+
+No key, or GIPHY briefly unavailable? The TV and phones fall back to the GIFs
+in `client/public/gifs`, served by the same Worker. The set is Scuba Cat,
+Smiling Dog, Dancing Kitten, Dancing Dog, Crying Cat and Laughing Dog, rendered
+at 170px (~3.2 MB total) with one shared 64-colour palette each so no frame
+ever flashes a garbage palette on loop. Tenor's API was retired in June 2026,
+so GIPHY is the search provider.
 
 ---
 
@@ -501,6 +539,7 @@ flashes a garbage palette on loop; swap the files and the ids in
 | Symptom | Fix |
 |---|---|
 | "Song search is not set up yet" | Node: put `YOUTUBE_API_KEY` in `.env` and restart. Worker: `npx wrangler secret put YOUTUBE_API_KEY` and deploy again. |
+| Memes still show the bundled GIFs | No `VITE_GIPHY_API_KEY` is in `client/.env` (or GIPHY is down/blocked on that network). Add a domain-restricted Web key, rebuild and redeploy. |
 | "The YouTube search quota is used up for today" | The free quota resets at midnight (Pacific). Cached searches and the Random tab still work. |
 | Phones cannot open the join page | On the LAN use `http://<ip>:3001`; on Cloudflare use the worker URL. Both are printed/shown by the app. |
 | No sound on the TV | Press **Start party** (that click unlocks audio) and check the TV volume. |

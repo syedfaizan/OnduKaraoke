@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { socket } from '../lib/realtime.js';
 import { REACTIONS, REACTION_BY_ID } from '../lib/reactions.js';
+import { isGiphyMediaUrl } from '../../../shared/memes.js';
 
 /** How many GIFs may float at the same time (animated GIFs are heavy). */
 const MAX_ON_SCREEN = 10;
 
 /**
- * Floating reactions on the host screen: the six cat/dog GIFs plus plain-text
- * emoji from the classic reaction set.
+ * Floating reactions on the host screen: the six cat/dog GIFs (bundled or a
+ * validated GIPHY URL) plus plain-text emoji from the classic reaction set.
  *
  * Nodes are created directly in the DOM (no React re-render per reaction) —
  * that keeps the TV smooth when the crowd goes wild. An unknown payload falls
@@ -26,7 +27,7 @@ export default function ReactionLayer({ spread = false }) {
       preload.src = gif;
     }
 
-    const spawn = ({ emoji }) => {
+    const spawn = ({ emoji, url }) => {
       const container = layer.current;
       if (!container) return;
 
@@ -38,7 +39,14 @@ export default function ReactionLayer({ spread = false }) {
       const reaction = REACTION_BY_ID.get(emoji);
       let node;
 
-      if (reaction) {
+      if (isGiphyMediaUrl(url)) {
+        // A fresh GIF picked by GIPHY for this button, validated by the server.
+        node = document.createElement('img');
+        node.src = url;
+        node.alt = '';
+        node.className = 'reaction reaction-gif';
+        node.style.width = `clamp(72px, ${5.5 + Math.random() * 4.5}vw, 200px)`;
+      } else if (reaction) {
         node = document.createElement('img');
         node.src = reaction.gif;
         node.alt = '';
