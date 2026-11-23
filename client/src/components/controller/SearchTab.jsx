@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { socket } from '../../lib/realtime.js';
 import { apiUrl } from '../../lib/config.js';
+import RandomPicker from './RandomPicker.jsx';
 
 /**
  * Search tab — type a song, add it to the shared queue under your name.
