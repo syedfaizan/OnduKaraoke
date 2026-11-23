@@ -12,6 +12,7 @@ export default function SearchTab({ roomCode, onToast }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [addedId, setAddedId] = useState(null);
+  const [showRandom, setShowRandom] = useState(false);
 
   const search = async (event) => {
     event.preventDefault();
@@ -67,39 +68,68 @@ export default function SearchTab({ roomCode, onToast }) {
 
   return (
     <div className="tab-content">
-      <form className="search-form" onSubmit={search}>
-        <input
-          className="neon-input"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search a song 🎵"
-          aria-label="Search a song"
-        />
-        <button type="submit" className="btn btn-cyan big" disabled={loading || !query.trim()}>
-          {loading ? 'Searching…' : 'Search'}
-        </button>
-      </form>
+      {/* The random picker lives here now — no separate tab needed. */}
+      <button
+        type="button"
+        className={`random-trigger ${showRandom ? 'open' : ''}`}
+        onClick={() => setShowRandom((open) => !open)}
+        aria-expanded={showRandom}
+      >
+        <span className="random-trigger-die" aria-hidden="true">
+          🎲
+        </span>
+        <span className="random-trigger-copy">
+          <strong>{showRandom ? 'Back to song search' : 'Surprise me'}</strong>
+          <small>
+            {showRandom
+              ? 'Return to the search bar'
+              : 'Pick a language, we’ll choose a karaoke hit'}
+          </small>
+        </span>
+        <span className="random-trigger-arrow" aria-hidden="true">
+          {showRandom ? '‹' : '›'}
+        </span>
+      </button>
 
-      {error && <p className="form-error">{error}</p>}
-
-      <ul className="results">
-        {results.map((song) => (
-          <li key={song.videoId} className="result">
-            <img className="result-thumb" src={song.thumbnail} alt="" />
-            <div className="result-info">
-              <span className="result-title">{song.title}</span>
-              <span className="result-channel">{song.channel}</span>
-            </div>
-            <button
-              type="button"
-              className={`btn add-btn ${addedId === song.videoId ? 'added' : ''}`}
-              onClick={() => add(song)}
-            >
-              {addedId === song.videoId ? 'Added ✓' : '＋ Add'}
+      {showRandom ? (
+        <RandomPicker roomCode={roomCode} onToast={onToast} />
+      ) : (
+        <>
+          <form className="search-form" onSubmit={search}>
+            <input
+              className="neon-input"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search a song 🎵"
+              aria-label="Search a song"
+            />
+            <button type="submit" className="btn btn-cyan big" disabled={loading || !query.trim()}>
+              {loading ? 'Searching…' : 'Search'}
             </button>
-          </li>
-        ))}
-      </ul>
+          </form>
+
+          {error && <p className="form-error">{error}</p>}
+
+          <ul className="results">
+            {results.map((song) => (
+              <li key={song.videoId} className="result">
+                <img className="result-thumb" src={song.thumbnail} alt="" />
+                <div className="result-info">
+                  <span className="result-title">{song.title}</span>
+                  <span className="result-channel">{song.channel}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`btn add-btn ${addedId === song.videoId ? 'added' : ''}`}
+                  onClick={() => add(song)}
+                >
+                  {addedId === song.videoId ? 'Added ✓' : '＋ Add'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

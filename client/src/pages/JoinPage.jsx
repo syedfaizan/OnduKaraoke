@@ -9,14 +9,12 @@ import NameGate from '../components/controller/NameGate.jsx';
 import SearchTab from '../components/controller/SearchTab.jsx';
 import QueueTab from '../components/controller/QueueTab.jsx';
 import ReactTab from '../components/controller/ReactTab.jsx';
-import RandomTab from '../components/controller/RandomTab.jsx';
 import ToastDeck from '../components/ToastDeck.jsx';
 
 const TABS = [
   { key: 'search', emoji: '🔍', label: 'Search' },
   { key: 'queue', emoji: '📋', label: 'Queue' },
   { key: 'react', emoji: '💜', label: 'React' },
-  { key: 'random', emoji: '🎲', label: 'Random' },
 ];
 
 /**
@@ -208,7 +206,6 @@ export default function JoinPage() {
           <QueueTab state={state} me={me} roomCode={roomCode} onToast={show} />
         )}
         {tab === 'react' && <ReactTab roomCode={roomCode} guestId={me?.guestId} />}
-        {tab === 'random' && <RandomTab roomCode={roomCode} onToast={show} />}
       </main>
 
       <nav className="tabbar">

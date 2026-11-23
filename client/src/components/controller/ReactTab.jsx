@@ -50,7 +50,7 @@ export default function ReactTab({ roomCode, guestId }) {
 
       {top.length > 0 && (
         <>
-          <h3 className="react-heading">Your top 5</h3>
+          <h3 className="react-heading">Your top 6</h3>
           <div className="emoji-grid">
             {top.map(({ emoji, count }) => (
               <button
@@ -123,7 +123,7 @@ export default function ReactTab({ roomCode, guestId }) {
       {pickerOpen && (
         <div className="emoji-picker">
           <input
-            className="emoji-search"
+            className="neon-input emoji-search"
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -177,6 +177,7 @@ export default function ReactTab({ roomCode, guestId }) {
       <h3 className="react-heading">Your own emoji</h3>
       <div className="custom-emoji-row">
         <input
+          className="neon-input custom-emoji-input"
           type="text"
           value={draft}
           onChange={(event) => {
@@ -189,7 +190,7 @@ export default function ReactTab({ roomCode, guestId }) {
           placeholder="Paste any emoji…"
           aria-label="Custom emoji"
         />
-        <button type="button" className="add-btn" onClick={addCustom}>
+        <button type="button" className="btn btn-pink add-btn custom-emoji-add" onClick={addCustom}>
           Add
         </button>
       </div>

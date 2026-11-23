@@ -9,10 +9,11 @@ const LANGUAGES = [
 ];
 
 /**
- * Random tab — pick a language, the server finds a popular karaoke song in
- * that language and drops it into the queue under your name.
+ * The random-song panel. It used to be its own tab; now the Search page's
+ * "Surprise me" button opens this exact view. Pick a language and the server
+ * finds a popular karaoke song and drops it into the queue under your name.
  */
-export default function RandomTab({ roomCode, onToast }) {
+export default function RandomPicker({ roomCode, onToast }) {
   const [busy, setBusy] = useState('');
 
   const pick = (language) => {
@@ -30,7 +31,7 @@ export default function RandomTab({ roomCode, onToast }) {
   };
 
   return (
-    <div className="tab-content">
+    <div className="random-picker">
       <p className="fair-note">Pick a language, we&apos;ll roll the dice 🎲</p>
 
       <div className="lang-grid">

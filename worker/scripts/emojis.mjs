@@ -1,5 +1,5 @@
 /**
- * Pure checks for the emoji catalogue + personal Top 5 — no browser required.
+ * Pure checks for the emoji catalogue + personal Top 6 — no browser required.
  *
  *   npm run smoke:emojis
  */
@@ -47,7 +47,7 @@ check('flags and keycaps are accepted', cleanCustomEmoji('🇮🇳') === '🇮�
 check('words are rejected', cleanCustomEmoji('hello') === '' && cleanCustomEmoji('🔥 party') === '');
 check('long strings are rejected', cleanCustomEmoji('🔥'.repeat(11)) === '');
 
-console.log('\n· personal Top 5');
+console.log('\n· personal Top 6');
 check('a new guest has no history', topEmojis('ravi').length === 0);
 recordEmoji('ravi', '🔥');
 recordEmoji('ravi', '🔥');
@@ -58,7 +58,7 @@ recordEmoji('ravi', '🪩');
 const top = topEmojis('ravi');
 check('sorted by usage', top[0].emoji === '🪩' && top[0].count === 3, JSON.stringify(top));
 check('counts are kept', top[1].emoji === '🔥' && top[1].count === 2);
-check('limited to five', topEmojis('ravi', 2).length === 2 && top.length <= 5);
+check('limited to six (or fewer on request)', topEmojis('ravi', 2).length === 2 && top.length <= 6);
 check('another guest has separate history', topEmojis('asha').length === 0);
 check('saved to localStorage', store.has('ondu:emoji-stats:ravi'));
 recordEmoji('ravi', '🎉');
@@ -66,7 +66,7 @@ recordEmoji('ravi', '❤️');
 recordEmoji('ravi', '👍');
 recordEmoji('ravi', '🎤');
 recordEmoji('ravi', '🙏');
-check('still only five after a long night', topEmojis('ravi').length === 5);
+check('still only six after a long night', topEmojis('ravi').length === 6);
 
 console.log('\n· custom emoji saved for reuse');
 for (let i = 0; i < 14; i += 1) saveCustomEmoji('asha', String.fromCodePoint(0x1f300 + i));

@@ -25,9 +25,9 @@ backend — and the YouTube Data API key never leaves the server.
 | 🔑 **Host password** | Every room gets a 6-digit password, folded under *🔐 Host password & remote* on the TV. Type it to get back in — from another device, after a refresh, or after pressing *back*. |
 | 💾 **6-hour sessions** | The host screen and every phone remember their room for 6 hours, so closing the tab (or the app) is not fatal. |
 | 📤 **Share** | One tap copies the join link, or opens the system share sheet (WhatsApp, Messages, AirDrop…). |
-| 🎲 **Random song** | Pick English / Hindi / Kannada and a popular karaoke track is queued under your name. |
+| 🎲 **Random song** | A **Surprise me 🎲** button above the search bar opens the language picker: choose English / Hindi / Kannada and a popular karaoke track drops into the queue under your name. |
 | 💜 **Live reactions** | Six one-tap classics (❤️ 🔥 👏 😂 🎤 🎉), a searchable emoji picker with categories, and a field for pasting your own emoji. Everything is text — no GIFs, no image API. Reactions float across the TV (over the video in minimal mode, in the side gutters on the lyrics screen) and count towards the singer's score. |
-| ⭐ **Your top 5** | Each phone remembers the five emoji that guest uses most, saved locally as a quick-send row that survives refresh and closing the tab. |
+| ⭐ **Your top 6** | Each phone remembers the six emoji that guest uses most, saved locally as a quick-send row that survives refresh and closing the tab. |
 | ⏭ **Intermission** | Fullscreen "Get ready, <singer>!" with an animated 5-second countdown, then the next song. |
 | 🎊 **Confetti** | A burst when a song ends and a big one for the night summary (canvas-confetti). |
 | 🏆 **Night summary** | Badges — *Most Songs*, *Crowd Favorite*, *Hype Master* — plus the final ranking. |
@@ -90,7 +90,7 @@ stage a new card shows **UP NEXT** — the title and who is singing it.
 ┌──────────────── TV / laptop ────────────────┐        ┌──── phone ────┐
 │  /host                                      │        │ /join/CODE   │
 │  ┌────────┬───────────────┬──────────────┐  │        │ Search Queue  │
-│  │ QR +   │  YouTube      │ Queue        │  │        │ React Random  │
+│  │ QR +   │  YouTube      │ Queue        │  │        │ React         │
 │  │ room   │  IFrame player│ Leaderboard  │  │        └───────┬──────┘
 │  │ code   │               │              │  │                │
 │  └────────┴───────────────┴──────────────┘  │                │
@@ -135,7 +135,7 @@ OnduKaraoke/
 │   ├── room.js               # room state, fair queue, stats, badges
 │   ├── commands.js           # every command + who may run it
 │   ├── youtube.js            # YouTube search + 24h cache (cache injected)
-│   └── randomSongs.js        # language presets for the Random tab
+│   └── randomSongs.js        # language presets for the random picker
 ├── server/                   # backend A — Express + Socket.IO (local dev / VPS)
 │   ├── index.js              # REST + all socket events
 │   ├── rooms.js              # the in-memory Map of rooms
@@ -147,7 +147,7 @@ OnduKaraoke/
 │   ├── room.js               # the Durable Object = one room
 │   ├── youtube.js            # injects the key + the Cache API cache
 │   ├── cache.js              # 24h cache on the Cache API
-│   ├── scripts/emojis.mjs    # emoji catalogue + Top 5 checks (npm run smoke:emojis)
+│   ├── scripts/emojis.mjs    # emoji catalogue + Top 6 checks (npm run smoke:emojis)
 │   └── scripts/smoke.mjs     # 38-check end-to-end test (npm run smoke:worker)
 └── client/
     ├── index.html
@@ -157,11 +157,11 @@ OnduKaraoke/
         ├── App.jsx           # routes
         ├── styles/neon.css   # the whole neon theme
         ├── lib/              # realtime (socket.io | workers), session (6h),
-        │                     #   emojis + personal Top 5, sounds, config, confetti…
+        │                     #   emojis + personal Top 6, sounds, config, confetti…
         ├── components/       # NeonTitle, QrPanel, YoutubePlayer, QueuePanel,
         │                     # Leaderboard, IntermissionOverlay, ReactionLayer,
         │                     # SummaryScreen, ToastDeck
-        ├── components/controller/   # phone tabs: NameGate, Search, Queue, React, Random
+        ├── components/controller/   # NameGate, Search (+ RandomPicker), Queue, React
         └── pages/            # HostPage.jsx, JoinPage.jsx
 ```
 
@@ -245,8 +245,8 @@ npm run dev:worker   # build + wrangler dev on :8787
    also unlocks audio in the browser).
 2. **Phones**: scan the QR code (or open `/join` and type the code) → enter a
    name → you are in.
-3. Guests pick songs in **Search**, gamble in **Random**, hype the singer in
-   **React**, and watch the queue in **Queue**.
+3. Guests pick songs in **Search**, open **Surprise me 🎲** there to gamble on
+   a random track, hype the singer in **React**, and watch the queue in **Queue**.
 4. The host can also scan the small **Host remote** QR with their phone to get
    *skip*, *reorder* and *speed* controls on the go.
 5. Between songs the TV shows **"Get ready, <name>!"** with a 5-second
@@ -266,7 +266,7 @@ Three suites drive a real server over websockets, plus one pure emoji check:
 npm run smoke           # Node/Socket.IO backend (37 checks)
 npm run smoke:worker    # Cloudflare Worker + Durable Objects (38 checks)
 npm run smoke:transport # browser transport: a second party gets a fresh socket (9 checks)
-npm run smoke:emojis    # emoji catalogue + personal Top 5 (24 checks)
+npm run smoke:emojis    # emoji catalogue + personal Top 6 (24 checks)
 ```
 
 | Check | What it proves |
@@ -274,7 +274,7 @@ npm run smoke:emojis    # emoji catalogue + personal Top 5 (24 checks)
 | lyrics parser | karaoke suffixes stripped, LRC timestamps parsed, current line found |
 | lyrics endpoint | both backends return synced lines for a known song |
 | emoji catalogue | categories, keyword search, and paste validation (words rejected) |
-| personal Top 5 | counts, ordering, five-item cap, per-guest isolation, saved custom emoji |
+| personal Top 6 | counts, ordering, six-item cap, per-guest isolation, saved custom emoji |
 | host creates a room | 4-letter code, unique |
 | guests join with a name | guestId + name issued |
 | fair rotation | 3 songs by Asha + 1 by Ravi queue as A1, R1, A2, A3 |
@@ -320,7 +320,7 @@ npm run smoke:emojis    # emoji catalogue + personal Top 5 (24 checks)
    pick from a category, or paste your own into **Your own emoji** and tap
    **Add**. Each one floats up the TV with a random position, tilt and size;
    the leaderboard and the singer's reaction count go up.
-9. **Your top 5** — after a few sends the favourites appear as a quick-send row
+9. **Your top 6** — after a few sends the favourites appear as a quick-send row
    with counts; refresh or close the phone tab and they are still there.
 10. **Speed** — 0.75x…1.25x changes the playback rate on the TV (pitch/key
     cannot be changed in an embedded YouTube player — that is why only speed
@@ -398,7 +398,7 @@ Phones scan the QR and join through the same URL. Done — one service.
 | `npm run deploy` | Build the client for Workers + deploy |
 | `npm run secret` | Add/update the `YOUTUBE_API_KEY` secret |
 | `npm run smoke:worker` | 38-check end-to-end test against `wrangler dev` |
-| `npm run smoke:emojis` | 24 pure checks for the emoji picker + personal Top 5 |
+| `npm run smoke:emojis` | 24 pure checks for the emoji picker + personal Top 6 |
 | `npx wrangler tail` | Live logs from the Worker |
 
 ### Local development against the Worker
@@ -503,7 +503,7 @@ even one added to Unicode after this app was built.
 `client/src/lib/emojis.js` holds the six one-tap classics, the searchable
 categories and the paste validator. `client/src/lib/emojiStats.js` keeps a
 per-guest history in localStorage: counts and last-used times drive the
-**Your top 5** quick-send row, and pasted emoji are saved (up to 12) under
+**Your top 6** quick-send row, and pasted emoji are saved (up to 12) under
 **My emoji** so they can be reused. The history follows the guest on that
 phone across rooms, refreshes and closed tabs; clearing site data clears it.
 
@@ -515,7 +515,7 @@ phone across rooms, refreshes and closed tabs; clearing site data clears it.
 |---|---|
 | "Song search is not set up yet" | Node: put `YOUTUBE_API_KEY` in `.env` and restart. Worker: `npx wrangler secret put YOUTUBE_API_KEY` and deploy again. |
 | A custom emoji will not send | The field accepts emoji only — no words or spaces. Paste just the emoji (e.g. 🪩), or pick one from **▼ More emojis**. |
-| "The YouTube search quota is used up for today" | The free quota resets at midnight (Pacific). Cached searches and the Random tab still work. |
+| "The YouTube search quota is used up for today" | The free quota resets at midnight (Pacific). Cached searches and the Surprise me picker still work. |
 | Phones cannot open the join page | On the LAN use `http://<ip>:3001`; on Cloudflare use the worker URL. Both are printed/shown by the app. |
 | No sound on the TV | Press **Start party** (that click unlocks audio) and check the TV volume. |
 | A video will not play | Expected for some uploads — the host screen auto-skips to the next song. |

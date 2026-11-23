@@ -2,7 +2,7 @@
  * A guest's personal emoji history — saved on this phone in localStorage.
  *
  * Two things are kept per guest:
- *   • counts + last-used times, so we can show their five most-used emoji
+ *   • counts + last-used times, so we can show their six most-used emoji
  *   • a short list of custom emoji they pasted, so they can reuse them
  *
  * This is deliberately NOT room state: it follows the person, not the party,
@@ -11,7 +11,7 @@
  */
 
 const PREFIX = 'ondu:emoji-stats:';
-const TOP_LIMIT = 5;
+const TOP_LIMIT = 6;
 const MAX_CUSTOM = 12;
 const MAX_TRACKED = 200;
 
@@ -46,7 +46,7 @@ function write(guestId, data) {
   }
 }
 
-/** [{ emoji, count }] — the five favourites, most used (then most recent) first. */
+/** [{ emoji, count }] — the six favourites, most used (then most recent) first. */
 export function topEmojis(guestId, limit = TOP_LIMIT) {
   const { counts, lastUsed } = read(guestId);
   return Object.entries(counts)
@@ -55,7 +55,7 @@ export function topEmojis(guestId, limit = TOP_LIMIT) {
     .slice(0, limit);
 }
 
-/** Record one sent reaction and return the refreshed Top 5. */
+/** Record one sent reaction and return the refreshed Top 6. */
 export function recordEmoji(guestId, emoji) {
   const value = String(emoji || '').trim();
   if (!value) return topEmojis(guestId);
