@@ -232,18 +232,35 @@ async function main() {
     });
     check('guests cannot remove other people’s songs', raviRemove?.ok === false);
 
-    console.log('\n· song end → next singer');
-    // Whatever is first in the queue has to be the next one on the mic.
+    console.log('\n· song end → host picks next');
+    // Whatever is first in the queue stays queued until the host starts it.
     const beforeEnd = latestState.get(host);
     const expectedNext = beforeEnd.queue[0]?.id;
     await ask(host, 'song:ended', { roomCode: created.roomCode, natural: true });
+    const waiting = await waitFor(
+      host,
+      (s) => s.phase === 'idle' && !s.current,
+      'the party waiting for the host',
+    );
+    check(
+      'song end returns to idle without auto-playing',
+      waiting.phase === 'idle' && waiting.current === null,
+      JSON.stringify({ phase: waiting.phase, current: waiting.current }),
+    );
+    check(
+      'the next song is still queued up for the host',
+      waiting.queue[0]?.id === expectedNext,
+      JSON.stringify(waiting.queue[0]),
+    );
+
+    await ask(host, 'party:start', { roomCode: created.roomCode });
     const next = await waitFor(
       host,
       (s) => s.phase === 'intermission' && Boolean(s.current),
       'the next singer',
     );
     check(
-      'the next song in the queue takes the mic',
+      'the host can start the next queued song',
       next.current?.id === expectedNext,
       JSON.stringify(next.current),
     );
@@ -254,19 +271,36 @@ async function main() {
 
       await ask(host, 'song:skip', { roomCode: created.roomCode });
 
+      const idle = await waitFor(
+        host,
+        (s) => s.phase === 'idle' && s.current === null,
+        'an idle party after skip',
+      );
+      check(
+        `skipping returns to idle for host choice (round ${round + 1})`,
+        idle.phase === 'idle',
+        JSON.stringify(idle),
+      );
+
       if (!expected) {
-        const idle = await waitFor(host, (s) => s.phase === 'idle', 'an idle party');
-        check('an empty queue idles the party', idle.phase === 'idle');
+        check('an empty queue idles the party', idle.queue.length === 0, JSON.stringify(idle.queue));
         break;
       }
 
+      check(
+        `the next song stays queued after skip (round ${round + 1})`,
+        idle.queue[0]?.id === expected,
+        JSON.stringify(idle.queue[0]),
+      );
+
+      await ask(host, 'party:start', { roomCode: created.roomCode });
       const after = await waitFor(
         host,
         (s) => s.phase === 'intermission' && s.current?.id === expected,
-        'the singer after the skip',
+        'the singer after host starts next',
       );
       check(
-        `skipping moves on to the next singer (round ${round + 1})`,
+        `host can start next singer after skip (round ${round + 1})`,
         after.current?.id === expected,
         JSON.stringify(after.current),
       );

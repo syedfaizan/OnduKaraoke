@@ -282,6 +282,17 @@ export default function HostPage() {
     socket.emit('song:skip', { roomCode });
   };
 
+  const playNext = () => {
+    setCover(false);
+    socket.emit('party:start', { roomCode });
+  };
+
+  const togglePause = () => {
+    if (!roomCode) return;
+    if (state?.phase === 'playing') socket.emit('song:pause', { roomCode });
+    else if (state?.phase === 'paused') socket.emit('song:resume', { roomCode });
+  };
+
   const setSpeed = (rate) => socket.emit('speed:set', { roomCode, rate });
 
   /** The player's clock — the lyrics panel follows this. */
@@ -415,7 +426,14 @@ export default function HostPage() {
         beginPlayback(state.current, elapsed > 4 ? elapsed - 1 : 0);
       } else {
         setCover(false);
+        player.current?.play();
       }
+      return;
+    }
+
+    if (state.phase === 'paused' && state.current) {
+      setCover(false);
+      player.current?.pause();
       return;
     }
 
@@ -494,11 +512,15 @@ export default function HostPage() {
             <button type="button" className="btn btn-pink big" onClick={startParty}>
               ▶ Start party
             </button>
-          ) : (
+          ) : state.phase === 'idle' && nextSong ? (
+            <button type="button" className="btn btn-pink big" onClick={playNext}>
+              ▶ Play next
+            </button>
+          ) : state.phase === 'playing' || state.phase === 'paused' || state.phase === 'intermission' ? (
             <button type="button" className="btn btn-ghost" onClick={skip}>
               ⏭ Skip
             </button>
-          )}
+          ) : null}
 
           {SHOW_SPEED && (
             <div className="speed-group">
@@ -615,13 +637,21 @@ export default function HostPage() {
             </div>
           )}
 
-          {cover && state.partyStarted && (
-            <div className="player-cover">
-              <span>Great song! 🎉</span>
+          {state.partyStarted && state.phase === 'idle' && nextSong && (
+            <div className="queue-empty-overlay next-up-overlay">
+              <div className="next-up-card">
+                <p className="next-up-kicker">UP NEXT</p>
+                <p className="next-up-title">{nextSong.title}</p>
+                <p className="next-up-singer">🎤 {nextSong.singerName}</p>
+                <p className="next-up-hint">Waiting for the host to start this song…</p>
+                <button type="button" className="btn btn-pink big" onClick={playNext}>
+                  ▶ Play next
+                </button>
+              </div>
             </div>
           )}
 
-          {state.partyStarted && state.phase === 'idle' && (
+          {state.partyStarted && state.phase === 'idle' && !nextSong && (
             <div className="queue-empty-overlay">
               <span>Queue&apos;s empty — scan the QR and add songs 🎶</span>
             </div>

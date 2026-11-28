@@ -279,12 +279,14 @@ export function createRoomState(code, { hostToken = null, hostPassword = null } 
     hostPassword,
     hostSocketId: null,
     partyStarted: false,
-    phase: 'idle', // idle | intermission | playing | ended
+    phase: 'idle', // idle | intermission | playing | paused | ended
+    paused: false,
     speed: 1,
     queue: [], // songs in raw add-order (source of truth)
     current: null, // the song being sung (or about to be)
     playAt: 0, // timestamp the next song should start (intermission countdown)
     startedAt: 0, // timestamp the current song actually started
+    pausedAt: 0, // timestamp playback was paused
     guests: new Map(), // guestId -> guest
     history: [], // songs that already happened tonight
     summary: null,
@@ -298,6 +300,7 @@ export function buildState(room) {
     roomCode: room.code,
     phase: room.phase,
     partyStarted: room.partyStarted,
+    paused: Boolean(room.paused),
     speed: room.speed,
     queue: room.queue, // already in play order — first item is up next
     current: room.current,

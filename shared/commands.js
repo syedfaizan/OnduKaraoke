@@ -213,24 +213,48 @@ export async function handleCommand({ room, type, payload = {}, actor, api }) {
       return { ok: true };
     }
 
+    case 'song:pause': {
+      if (!isHost) return fail('Host controls only.');
+      if (room.phase !== 'playing' || !room.current) return fail('Nothing is playing right now.');
+      room.phase = 'paused';
+      room.paused = true;
+      room.pausedAt = Date.now();
+      api.touch?.();
+      return { ok: true };
+    }
+
+    case 'song:resume': {
+      if (!isHost) return fail('Host controls only.');
+      if (room.phase !== 'paused' || !room.current) return fail('Nothing is paused right now.');
+      const pausedFor = Math.max(0, Date.now() - (room.pausedAt || Date.now()));
+      room.startedAt += pausedFor; // keep lyrics/progress stable across pause
+      room.paused = false;
+      room.pausedAt = 0;
+      room.phase = 'playing';
+      api.touch?.();
+      return { ok: true };
+    }
+
     case 'song:ended': {
       if (!isHost) return fail('Host controls only.');
 
       finishSong(room, { natural: Boolean(payload.natural) });
       api.touch?.();
-      advance(room);
+      // Don't auto-advance — the host chooses when to play the next song.
+      room.phase = 'idle';
       return { ok: true };
     }
 
     case 'song:skip': {
       if (!isHost) return fail('Host controls only.');
-      if (room.phase !== 'playing' && room.phase !== 'intermission') {
+      if (room.phase !== 'playing' && room.phase !== 'paused' && room.phase !== 'intermission') {
         return fail('Nothing is playing right now.');
       }
 
       finishSong(room, { natural: false });
       api.touch?.();
-      advance(room);
+      // Don't auto-advance — the host chooses when to play the next song.
+      room.phase = 'idle';
       return { ok: true };
     }
 

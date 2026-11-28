@@ -26,9 +26,28 @@ export default function QueueTab({ state, me, roomCode, onToast }) {
     });
   };
 
+  const playNext = () => {
+    socket.emit('party:start', { roomCode }, (ack) => {
+      if (!ack?.ok) onToast?.(ack?.error || 'Could not start the next song', 'error');
+    });
+  };
+
+  const nextSong = state?.queue?.[0];
+
   return (
     <div className="tab-content">
       <p className="fair-note">🔄 Singers rotate automatically — everybody gets a turn.</p>
+
+      {isHost && state?.partyStarted && state?.phase === 'idle' && nextSong && (
+        <div className="host-next-card card">
+          <p className="host-next-kicker">HOST CONTROL</p>
+          <p className="host-next-title">{nextSong.title}</p>
+          <p className="host-next-singer">🎤 {nextSong.singerName}</p>
+          <button type="button" className="btn btn-pink big" onClick={playNext}>
+            ▶ Play next
+          </button>
+        </div>
+      )}
 
       <QueuePanel
         variant="phone"

@@ -188,15 +188,69 @@ export default function JoinPage() {
   /* ---------------- the phone controller ---------------- */
 
   const isHost = Boolean(me?.isHost);
+  const currentSong = state?.current;
+  const nextSong = state?.queue?.[0];
+  const canPlayPause = isHost && (state?.phase === 'playing' || state?.phase === 'paused' || (state?.phase === 'idle' && Boolean(nextSong)));
+  const canNext = isHost && (state?.phase === 'playing' || state?.phase === 'paused' || state?.phase === 'intermission' || (state?.phase === 'idle' && Boolean(nextSong)));
+
+  const playPause = () => {
+    if (!isHost) return;
+    if (state?.phase === 'playing') {
+      socket.emit('song:pause', { roomCode }, (ack) => {
+        if (!ack?.ok) show(ack?.error || 'Could not pause', 'error');
+      });
+      return;
+    }
+    if (state?.phase === 'paused') {
+      socket.emit('song:resume', { roomCode }, (ack) => {
+        if (!ack?.ok) show(ack?.error || 'Could not resume', 'error');
+      });
+      return;
+    }
+    if (state?.phase === 'idle' && nextSong) {
+      socket.emit('party:start', { roomCode }, (ack) => {
+        if (!ack?.ok) show(ack?.error || 'Could not start the next song', 'error');
+      });
+    }
+  };
+
+  const playNext = () => {
+    if (!isHost) return;
+    if (state?.phase === 'playing' || state?.phase === 'paused' || state?.phase === 'intermission') {
+      socket.emit('song:skip', { roomCode }, (ack) => {
+        if (!ack?.ok) show(ack?.error || 'Could not skip', 'error');
+      });
+      return;
+    }
+    if (state?.phase === 'idle' && nextSong) {
+      socket.emit('party:start', { roomCode }, (ack) => {
+        if (!ack?.ok) show(ack?.error || 'Could not start the next song', 'error');
+      });
+    }
+  };
+
+  const playPauseLabel = state?.phase === 'playing' ? '⏸' : '▶';
+  const playPauseTitle = state?.phase === 'playing' ? 'Pause' : state?.phase === 'paused' ? 'Resume' : 'Play next';
+  const miniStatus = !state?.partyStarted
+    ? 'Party not started'
+    : state?.phase === 'intermission'
+      ? `Up next: ${currentSong?.title || 'Getting ready…'}`
+      : state?.phase === 'paused'
+        ? `Paused: ${currentSong?.title || 'Nothing playing'}`
+        : state?.phase === 'playing'
+          ? currentSong?.title || 'Nothing playing'
+          : nextSong
+            ? `Next: ${nextSong.title}`
+            : 'Queue is empty';
 
   return (
-    <div className="phone">
+    <div className={`phone ${isHost ? 'phone-host' : ''}`}>
       <header className="phone-header">
         <NeonTitle size="sm" />
         <div className="phone-meta">
           <span className="status-chip room-chip">{roomCode}</span>
           <span className="status-chip">{me?.name}</span>
-          {isHost && <span className="status-chip host-chip">🎧 Host</span>}
+          {isHost && <span className="status-chip host-chip">🎧 Host remote</span>}
         </div>
       </header>
 
@@ -207,6 +261,37 @@ export default function JoinPage() {
         )}
         {tab === 'react' && <ReactTab roomCode={roomCode} guestId={me?.guestId} />}
       </main>
+
+      {isHost && (
+        <div className="host-mini-player" role="region" aria-label="Host playback controls">
+          <div className="host-mini-meta">
+            <span className="host-mini-kicker">NOW PLAYING</span>
+            <span className="host-mini-title" title={miniStatus}>{miniStatus}</span>
+          </div>
+          <div className="host-mini-actions">
+            <button
+              type="button"
+              className="host-mini-btn"
+              onClick={playPause}
+              disabled={!canPlayPause}
+              aria-label={playPauseTitle}
+              title={playPauseTitle}
+            >
+              {playPauseLabel}
+            </button>
+            <button
+              type="button"
+              className="host-mini-btn"
+              onClick={playNext}
+              disabled={!canNext}
+              aria-label="Next song"
+              title="Next song"
+            >
+              ⏭
+            </button>
+          </div>
+        </div>
+      )}
 
       <nav className="tabbar">
         {TABS.map((item) => (

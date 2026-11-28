@@ -292,6 +292,8 @@ io.on('connection', (socket) => {
     'queue:move',
     'party:start',
     'song:started',
+    'song:pause',
+    'song:resume',
     'song:ended',
     'song:skip',
     'speed:set',

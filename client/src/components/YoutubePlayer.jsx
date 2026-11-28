@@ -81,6 +81,20 @@ const YoutubePlayer = forwardRef(function YoutubePlayer({ onEnded }, ref) {
             // Player not ready yet — nothing to stop.
           }
         },
+        pause() {
+          try {
+            player.current?.pauseVideo();
+          } catch {
+            // ignore
+          }
+        },
+        play() {
+          try {
+            player.current?.playVideo();
+          } catch {
+            // ignore
+          }
+        },
         setRate(nextRate) {
           rate.current = nextRate;
           try {

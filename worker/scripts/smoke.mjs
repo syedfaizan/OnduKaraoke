@@ -264,16 +264,33 @@ async function main() {
     const raviRemove = await ravi.emit('queue:remove', { songId: moved.queue[0].id });
     check('guests cannot remove other people’s songs', raviRemove?.ok === false);
 
-    console.log('\n· song end → next singer');
+    console.log('\n· song end → host picks next');
     const beforeEnd = host.state;
     const expectedNext = beforeEnd.queue[0]?.id;
     await host.emit('song:ended', { natural: true });
+    const waiting = await waitForState(
+      host,
+      (s) => s.phase === 'idle' && !s.current,
+      'the party waiting for the host',
+    );
+    check(
+      'song end returns to idle without auto-playing',
+      waiting.phase === 'idle' && waiting.current === null,
+      JSON.stringify({ phase: waiting.phase, current: waiting.current }),
+    );
+    check(
+      'the next song is still queued up for the host',
+      waiting.queue[0]?.id === expectedNext,
+      JSON.stringify(waiting.queue[0]),
+    );
+
+    await host.emit('party:start');
     const next = await waitForState(
       host,
       (s) => s.phase === 'intermission' && Boolean(s.current),
       'the next singer',
     );
-    check('the next song takes the mic', next.current?.id === expectedNext, JSON.stringify(next.current));
+    check('the host can start the next queued song', next.current?.id === expectedNext, JSON.stringify(next.current));
 
     console.log('\n· host password + coming back');
     check(
