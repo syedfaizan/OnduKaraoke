@@ -583,12 +583,36 @@ img {
 
 /* Slimmer chrome = a taller video. */
 .host.minimal .host-header {
-  padding: 0.4rem 0.85rem;
-  gap: 0.6rem;
+  padding: 0.28rem 0.75rem;
+  gap: 0.45rem;
 }
 
 .host.minimal .host-header .neon-title.lg .neon-words {
-  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  font-size: clamp(1rem, 1.3vw, 1.35rem);
+}
+
+.host.minimal .host-status {
+  gap: 0.3rem;
+}
+
+.host.minimal .host-status .status-chip {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.host.minimal .host-actions {
+  gap: 0.35rem;
+}
+
+.host.minimal .host-actions .btn {
+  padding: 0.38rem 0.7rem;
+  font-size: 0.82rem;
+  border-radius: 10px;
+}
+
+.host.minimal .host-actions .btn.big {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
 }
 
 .host.minimal .stage {
